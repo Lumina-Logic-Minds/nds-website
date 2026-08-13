@@ -1,0 +1,202 @@
+@charset "UTF-8";
+
+/* ============================================
+   オープニングアニメーション
+   白背景 → ロゴ出現 → 紺からオレンジへ → ズーム
+   1セッション1回のみ再生
+   ============================================ */
+
+/*
+ * スプラッシュ用のマークアップがある間は、最初から TOP を隠しておく。
+ * JS の判断を待つと、その一瞬だけ TOP が見えてしまうため、
+ * CSS の時点で伏せておき、不要と分かった時点で JS が解除する。
+ */
+html.splash-pending body > *:not(.splash) {
+  visibility: hidden;
+}
+
+body.splash-active {
+  overflow: hidden;
+}
+
+/* 再生中は TOP を隠す。白幕が消えきってから見せる */
+body.splash-active:not(.splash-reveal) > *:not(.splash) {
+  visibility: hidden;
+}
+
+body.splash-active.splash-reveal > *:not(.splash) {
+  visibility: visible;
+}
+
+/* スプラッシュを出さないと決まったら、すぐ解除する */
+body.splash-skip > *:not(.splash) {
+  visibility: visible;
+}
+
+.splash {
+  /*
+   * 画面を覆う幕の色。
+   * オレンジに戻す場合は var(--c-orange) にする。
+   */
+  --splash-veil: #ffffff;
+
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* 白幕（いちばん下） */
+.splash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--c-bg);
+  opacity: 1;
+  /* オレンジの円が覆っている間に消えるよう、短めにする */
+  transition: opacity 0.5s var(--e-out);
+}
+
+/*
+ * オレンジの幕。
+ * ロゴのズームに合わせて円が広がり、画面全体を覆う。
+ * その後は不透明のまま、中央から円形にくり抜いて TOP を見せる。
+ * opacity でフェードさせると消え際に TOP が透けるため、
+ * clip-path で「穴を開ける」方式にしている。
+ */
+.splash::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: 130vmax;
+  height: 130vmax;
+  margin: -65vmax 0 0 -65vmax;
+  border-radius: 50%;
+  background: var(--splash-veil);
+  transform: scale(0);
+}
+
+/* ① 広がって画面を覆う（JS の TIMING.cover と揃える） */
+.splash.is-covering::after {
+  animation: splash-cover 0.64s var(--e-inout) forwards;
+}
+
+@keyframes splash-cover {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* ② 覆いきったらオレンジの面を消し、リングに引き継ぐ */
+.splash.is-opening::after {
+  opacity: 0;
+}
+
+/*
+ * リング：画面全体を覆うオレンジの面に、
+ * 中央から広がる円形の穴を開けて TOP を見せる。
+ *
+ * 穴は太い border で作る。要素の中央（width/height の領域）が
+ * 穴になり、border が周囲を塗り潰す。
+ */
+.splash__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  box-sizing: content-box;
+  width: 0;
+  height: 0;
+  border: 110vmax solid var(--splash-veil);
+  border-radius: 50%;
+  margin: -110vmax 0 0 -110vmax;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash.is-opening .splash__ring {
+  opacity: 1;
+  animation: splash-open 1.6s var(--e-inout) forwards;
+}
+
+@keyframes splash-open {
+  from {
+    width: 0;
+    height: 0;
+    margin: -110vmax 0 0 -110vmax;
+  }
+  to {
+    width: 150vmax;
+    height: 150vmax;
+    margin: -185vmax 0 0 -185vmax;
+  }
+}
+
+/*
+ * ② 覆ったまま、中央から円形に開いて TOP を見せる。
+ *
+ * clip-path: circle() は内側を残してしまうため、
+ * mask のグラデーションで「中央だけ透明な穴」を作り、
+ * その半径を広げることで開いていく表現にする。
+ */
+/*
+ * 白幕は、オレンジが広がりはじめてから消す。
+ * ズームと同時に消すと、拡大中のロゴの背後に TOP が透けてしまう。
+ */
+.splash.is-covering::before {
+  opacity: 0;
+}
+
+.splash.is-exit {
+  pointer-events: none;
+}
+
+/* ---------- ロゴ ---------- */
+/* オレンジの幕（z-index: 1）より下に置き、覆われたら隠れるようにする */
+.splash__logo {
+  position: relative;
+  z-index: 0;
+  width: min(44vw, 340px);
+  opacity: 0;
+  transform: scale(0.9);
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.splash.is-visible .splash__logo {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 1s var(--e-out),
+    transform 1.1s var(--e-back);
+}
+
+.splash__logo svg {
+  width: 100%;
+  height: auto;
+}
+
+/* 初期は紺、is-colorize でオレンジへ */
+.splash__logo .lg-mark,
+.splash__logo .lg-text {
+  fill: var(--c-navy);
+  transition: fill 0.9s var(--e-soft);
+}
+
+.splash.is-colorize .splash__logo .lg-mark {
+  fill: var(--c-orange-lt);
+}
+
+.splash.is-colorize .splash__logo .lg-text {
+  fill: var(--c-orange);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash { display: none; }
+}

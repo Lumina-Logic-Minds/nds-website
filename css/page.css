@@ -1,0 +1,2054 @@
+@charset "UTF-8";
+
+/* ============================================
+   下層ページ共通
+   ページ見出し / 会社概要 / 企業理念 / 環境保護方針 / 沿革
+   ============================================ */
+
+body {
+  background: var(--c-bg-sub);
+}
+
+/* ============ ページ見出し ============ */
+.phead {
+  padding-block: calc(var(--header-h) + clamp(70px, 11vw, 150px))
+    clamp(40px, 6vw, 80px);
+}
+
+/*
+ * 見出し直後のセクションは、.phead の下余白と .section の上余白が
+ * 足し算になって空きすぎるため、上側だけ詰める。
+ */
+.phead + .section,
+.phead + article.section {
+  padding-top: clamp(24px, 3.5vw, 48px);
+}
+
+/*
+ * ページ見出しは TOP の 3 導線と同じ色を使う。
+ * COMPANY = 紺 / SERVICE = 深緑 / RECRUIT = オレンジ。
+ * 色は各ページの .phead に --page-c で持たせる。
+ */
+.phead__en {
+  font-family: var(--f-en);
+  font-size: clamp(2.5rem, 8vw, 5.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: var(--page-c, var(--c-ink));
+}
+
+.phead__ja {
+  margin-top: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--c-ink);
+}
+
+/*
+ * 見出しを 1 文字ずつ立ち上げる。
+ * TOP の 3 導線と同じ仕掛けで、JS がマスクを組む。
+ */
+.pc {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+  /* inline-block だと半角スペースが潰れて語が繋がるため保持する */
+  white-space: pre;
+}
+
+.pc__i {
+  display: inline-block;
+  transform: translateY(105%);
+  transition: transform 1.1s var(--e-out);
+}
+
+.split-mask.is-in .pc__i {
+  transform: translateY(0);
+}
+
+/*
+ * 行単位のマスク。JS が実際の折り返し位置で分割して組む。
+ * 1 文字ずつではなく行ごとなので、長い文章でも重くならない。
+ */
+.ln {
+  display: block;
+  overflow: hidden;
+  /* 下端が切れないよう、はみ出しぶんを見込んでおく */
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+.ln__i {
+  display: block;
+  transform: translateY(105%);
+  transition: transform 1.05s var(--e-out);
+}
+
+.is-in .ln__i {
+  transform: translateY(0);
+}
+
+/*
+ * 中の要素を順に出すコンテナは、自身はフェードさせない。
+ * reveal を二重に掛けると、動きが鈍って見える。
+ * （is-in を受け取るためにクラス自体は残す）
+ */
+.env__grid.reveal,
+.hist.reveal,
+.creed__item.reveal,
+.srv.reveal,
+.rlead__title.reveal,
+.rlead__text.reveal {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+/* 文字ごとに動かす要素は、reveal の一括フェードを掛けない */
+.rmsg__text.reveal {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+/* セクション見出しの和文は、セクションごとの色にする */
+.sec-head__ja {
+  color: var(--sec-c, var(--c-ink));
+  font-weight: 700;
+}
+
+/* ============ 会社概要 ============ */
+
+/*
+ * 見出しは左に置いたまま、右のカードだけが流れる。
+ * 見出しは sticky で追従させ、長いリストの間も見え続ける。
+ */
+.profile__layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 24%) 1fr;
+  gap: clamp(24px, 4vw, 64px);
+  align-items: start;
+}
+
+.sec-head--stack {
+  display: block;
+  position: sticky;
+  top: calc(var(--header-h) + 40px);
+  margin-bottom: 0;
+}
+
+.sec-head--stack .sec-head__ja {
+  margin-top: 12px;
+}
+
+/* 罫線は使わず、カードの隙間で区切る */
+.profile__list {
+  display: grid;
+  gap: clamp(10px, 1.2vw, 14px);
+}
+
+/* 短い項目は 2 枚を横に並べて、単調な縦積みを崩す */
+.profile__pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(10px, 1.2vw, 14px);
+}
+
+/*
+ * 1 行 = 1 枚の白いカード。
+ * 項目名の幅を固定して、値の開始位置を全カードで揃える。
+ *
+ * 11 行あって縦に長いので、行ごとに監視して画面に入ったものから出す。
+ * リスト単位で一度に出すと、下の行は画面外で動き終わってしまう。
+ */
+.profile__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: clamp(14px, 2vw, 28px);
+  align-items: start;
+  padding: clamp(20px, 2.4vw, 28px) clamp(20px, 2.6vw, 34px);
+  background: var(--c-bg);
+  border-radius: 12px;
+
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.85s var(--e-out), transform 0.95s var(--e-out),
+    box-shadow 0.45s var(--e-out);
+}
+
+.profile__row.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* 横並びのカードは列幅が狭いので、項目名の幅を詰める */
+.profile__pair .profile__row {
+  grid-template-columns: minmax(72px, 96px) 1fr;
+}
+
+.profile__row:hover {
+  box-shadow: 0 10px 26px rgba(29, 29, 29, 0.07);
+}
+
+/* 項目名は薄いグレーで小さく、値を主役にする */
+.profile__row dt {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.9;
+  color: var(--c-ink-weak);
+  /* 「プライバシーマーク」など長い項目名でも値の位置を崩さない */
+  white-space: nowrap;
+}
+
+.profile__row dd {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.9;
+  color: var(--c-ink);
+}
+
+.profile__ul li + li {
+  margin-top: 6px;
+}
+
+/* ============ 企業理念 ============ */
+.creed {
+  display: grid;
+  gap: clamp(28px, 4vw, 56px);
+}
+
+/*
+ * 見出しは左から、本文は逆に右から入る。
+ * はみ出しを隠して、線の外側から滑り込むように見せる。
+ */
+.creed__item {
+  position: relative;
+  padding-left: clamp(18px, 2.4vw, 32px);
+  overflow: hidden;
+}
+
+/* 左の縦線はスクロールで上から下へ伸びる */
+.creed__item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 0;
+  background: var(--c-orange);
+  transition: height 1.1s var(--e-inout) 0.15s;
+}
+
+.creed__item:nth-child(2)::before {
+  background: var(--c-navy);
+}
+
+.creed__item.is-in::before {
+  height: 100%;
+}
+
+/* 見出しは左から */
+.creed__title {
+  font-size: clamp(1.25rem, 2.6vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+
+  opacity: 0;
+  transform: translateX(-64px);
+  transition: opacity 1s var(--e-out) 0.25s,
+    transform 1.25s var(--e-out) 0.25s;
+}
+
+/* 本文は少し遅れて右から。逆方向にすることで L 字に組み上がる */
+.creed__text {
+  max-width: 62ch;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 2.05;
+  color: var(--c-ink);
+  line-break: strict;
+  word-break: auto-phrase;
+
+  opacity: 0;
+  transform: translateX(72px);
+  transition: opacity 1s var(--e-out) 0.55s,
+    transform 1.35s var(--e-out) 0.55s;
+}
+
+.creed__item.is-in .creed__title,
+.creed__item.is-in .creed__text {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============ 環境保護方針 ============ */
+
+/*
+ * 下のカードが端まで届くので、リード文も幅を絞らない。
+ * 途中で止めると右下に空白ができて、重心が左に寄って見える。
+ */
+.env__lead {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 2.1;
+  color: var(--c-ink);
+  margin-bottom: clamp(32px, 5vw, 56px);
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+/* 回転を立体に見せるため、遠近法をグリッド側に持たせる */
+.env__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(16px, 2.4vw, 28px);
+  perspective: 1200px;
+}
+
+/*
+ * カードは奥から手前へ、回りながら現れる。
+ * 平面の回転（rotate）に Y 軸の回転を重ね、さらに奥から寄せることで
+ * 「めくれて出る」より動きの大きい登場にしている。
+ */
+.env__card {
+  position: relative;
+  padding: clamp(24px, 3vw, 36px);
+  background: var(--c-bg);
+  border-radius: 14px;
+  overflow: hidden;
+
+  opacity: 0;
+  transform-origin: 50% 60%;
+  transform: rotate(-14deg) rotateY(52deg) translateZ(-160px) scale(0.82);
+  transition: opacity 1s var(--e-out), transform 1.9s var(--e-back),
+    box-shadow 0.5s var(--e-out);
+  transition-delay: calc(var(--i, 0) * 0.26s);
+}
+
+/* 偶数枚目は逆回りにして、単調な繰り返しに見えないようにする */
+.env__card:nth-child(even) {
+  transform: rotate(14deg) rotateY(-52deg) translateZ(-160px) scale(0.82);
+}
+
+.env__grid.is-in .env__card {
+  opacity: 1;
+  transform: none;
+}
+
+.env__card:hover {
+  box-shadow: 0 12px 28px rgba(29, 29, 29, 0.08);
+}
+
+/* 番号を大きく薄く敷いて奥行きを出す */
+.env__card::before {
+  content: attr(data-num);
+  position: absolute;
+  right: -6px;
+  bottom: -26px;
+  font-family: var(--f-en);
+  font-size: 6rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--c-green);
+  opacity: 0.07;
+  transition: opacity 0.5s var(--e-out), transform 0.5s var(--e-out);
+}
+
+.env__card:hover::before {
+  opacity: 0.14;
+  transform: translateY(-4px);
+}
+
+.env__title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.env__text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 2;
+  color: var(--c-ink);
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+/* ============ 沿革 ============ */
+.hist {
+  position: relative;
+  padding-left: clamp(24px, 4vw, 48px);
+}
+
+/* 縦に通す線。項目が増えても伸びる */
+.hist::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 4px;
+  width: 1px;
+  height: 0;
+  background: var(--c-navy);
+  opacity: 0.35;
+  transition: height 1.2s var(--e-inout) 0.1s;
+}
+
+/* スクロールで線が上から下へ伸びる */
+.hist.is-in::before {
+  height: calc(100% - 16px);
+}
+
+.hist__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(140px, 18%) 1fr;
+  gap: clamp(16px, 3vw, 40px);
+  padding-block: clamp(14px, 2vw, 22px);
+}
+
+/* 年月の位置に点を打つ */
+.hist__item::before {
+  content: "";
+  position: absolute;
+  top: calc(clamp(14px, 2vw, 22px) + 0.65em);
+  left: calc(clamp(24px, 4vw, 48px) * -1);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c-orange);
+
+  /* 線が伸びきったあとに打たれる */
+  transform: scale(0);
+  transition: transform 0.5s var(--e-back);
+  transition-delay: calc(0.55s + var(--i, 0) * 0.12s);
+}
+
+.hist.is-in .hist__item::before {
+  transform: scale(1);
+}
+
+.hist__date {
+  font-family: var(--f-en);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--c-navy);
+}
+
+.hist__body {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.9;
+  color: var(--c-ink);
+}
+
+/* ============ Responsive ============ */
+@media (max-width: 900px) {
+  /* 見出しを上に戻し、カードを 1 列に積む */
+  .profile__layout {
+    grid-template-columns: 1fr;
+    gap: clamp(24px, 5vw, 40px);
+  }
+
+  .sec-head--stack {
+    position: static;
+  }
+
+  .profile__row,
+  .profile__pair .profile__row,
+  .profile__pair,
+  .hist__item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .env__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ============================================
+   SERVICE / 事業一覧
+   ============================================ */
+
+/*
+ * セクション自身の余白は殺し、1 事業ずつが独立した帯になるようにする。
+ * 帯の色は各ブロックの --srv-c から作る。
+ */
+.srv-list {
+  padding-block: 0;
+}
+
+/*
+ * 1 事業 = 全幅の帯。
+ * 中身は .srv__inner で中央に絞り、背景だけが端まで届く。
+ */
+.srv {
+  position: relative;
+  display: block;
+  padding-block: clamp(72px, 10vw, 130px);
+  color: inherit;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/*
+ * 事業ごとの色を、ごく薄い面として敷く。
+ * color-mix で --srv-c から自動的に作るので、色を変えれば面も追従する。
+ */
+.srv::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: color-mix(in srgb, var(--srv-c) 5%, transparent);
+  transition: background 0.6s var(--e-out);
+}
+
+/* 1 つおきに濃さを変えて、帯の切れ目を分かりやすくする */
+.srv:nth-child(even)::before {
+  background: color-mix(in srgb, var(--srv-c) 9%, transparent);
+}
+
+a.srv:hover::before {
+  background: color-mix(in srgb, var(--srv-c) 13%, transparent);
+}
+
+/* ---- 背景に流す英字 ---- */
+
+/*
+ * 事業名の英字を大きく薄く敷き、スクロールに合わせて横に流す。
+ * --p は JS がスクロール量（0〜1）を入れる。
+ */
+.srv__bgen {
+  position: absolute;
+  /* 本文と重ならないよう、帯の上端と下端に逃がす */
+  top: 0;
+  left: 0;
+  z-index: -1;
+  font-family: var(--f-en);
+  font-size: clamp(5rem, 15vw, 13rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--srv-c);
+  opacity: 0.045;
+  pointer-events: none;
+  user-select: none;
+  /* 右から左へ。--p が進むほど左へ寄る */
+  transform: translate(calc(60% - var(--p, 0) * 55%), -38%);
+}
+
+/* 奇数ブロックは逆向きに流し、位置も下端へ振る */
+.srv:nth-child(even) .srv__bgen {
+  top: auto;
+  bottom: 0;
+  transform: translate(calc(-15% + var(--p, 0) * 55%), 38%);
+}
+
+/* ---- レイアウト ---- */
+.srv__inner {
+  position: relative;
+  width: 100%;
+  max-width: var(--w-max);
+  margin-inline: auto;
+  padding-inline: var(--pad-x);
+
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: clamp(28px, 5vw, 72px);
+  align-items: center;
+}
+
+.srv:nth-child(even) .srv__media {
+  order: 2;
+}
+
+/* ---- 画像 ---- */
+
+/*
+ * 画像はマスクが開くように現れる。
+ * clip-path を左右から開くことで、シャッターのような登場になる。
+ */
+.srv__media {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--c-bg);
+
+  clip-path: inset(0 100% 0 0 round 16px);
+  transition: clip-path 1.5s var(--e-inout);
+}
+
+/* 反対側のブロックは逆方向から開く */
+.srv:nth-child(even) .srv__media {
+  clip-path: inset(0 0 0 100% round 16px);
+}
+
+.srv.is-in .srv__media,
+.srv.is-in:nth-child(even) .srv__media {
+  clip-path: inset(0 0 0 0 round 16px);
+}
+
+/*
+ * 画像自体はマスクと逆向きに動かす。
+ * 開くより遅れて追いつくので、奥行きが出る。
+ */
+.srv__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: scale(1.16) translateX(-4%);
+  transition: transform 1.7s var(--e-out);
+}
+
+.srv:nth-child(even) .srv__media img {
+  transform: scale(1.16) translateX(4%);
+}
+
+.srv.is-in .srv__media img,
+.srv.is-in:nth-child(even) .srv__media img {
+  transform: none;
+}
+
+a.srv:hover .srv__media img {
+  transform: scale(1.045);
+}
+
+/* 素材が届くまでの仮置き */
+.srv__media--soon {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 750 / 422;
+  border: 1px dashed color-mix(in srgb, var(--srv-c) 35%, transparent);
+  background: transparent;
+}
+
+.srv__media--soon span {
+  font-family: var(--f-en);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--srv-c);
+  opacity: 0.65;
+}
+
+/* ---- テキスト ---- */
+.srv__body {
+  opacity: 0;
+  transform: translateX(48px);
+  transition: opacity 1s var(--e-out) 0.35s, transform 1.3s var(--e-out) 0.35s;
+}
+
+.srv:nth-child(even) .srv__body {
+  transform: translateX(-48px);
+}
+
+.srv.is-in .srv__body {
+  opacity: 1;
+  transform: none;
+}
+
+/* 事業名の下に、その事業の色で線を引く */
+.srv__name {
+  position: relative;
+  font-size: clamp(1.375rem, 3vw, 2rem);
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+  color: var(--srv-c);
+}
+
+.srv__name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 56px;
+  height: 3px;
+  background: var(--srv-c);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.9s var(--e-out) 0.7s;
+}
+
+.srv.is-in .srv__name::after {
+  transform: scaleX(1);
+}
+
+.srv__text {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 2.05;
+  color: var(--c-ink);
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+.srv__text + .srv__text {
+  margin-top: 1.2em;
+}
+
+@media (max-width: 900px) {
+  /* 1 列に積み、画像を必ず先に出す */
+  .srv__inner,
+  .srv:nth-child(even) .srv__inner {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .srv:nth-child(even) .srv__media {
+    order: 0;
+  }
+
+  .srv__body,
+  .srv:nth-child(even) .srv__body {
+    transform: translateY(24px);
+  }
+
+  .srv.is-in .srv__body {
+    transform: none;
+  }
+
+  .srv__bgen {
+    font-size: clamp(3.5rem, 20vw, 7rem);
+  }
+}
+
+/* ============================================
+   RECRUIT / 採用情報
+   ============================================ */
+
+/* ---- リード ---- */
+.rlead__title {
+  font-size: clamp(1.5rem, 3.2vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.65;
+  letter-spacing: 0.03em;
+  margin-bottom: clamp(24px, 3.5vw, 40px);
+  /* 「大きい方がい／い。」のような不自然な折り返しを避ける */
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+/* 「仕事のスケール」だけブランドカラーで強調する */
+.rlead__title em {
+  font-style: normal;
+  color: var(--c-orange);
+}
+
+.rlead__text {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 2.05;
+  color: var(--c-ink);
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+.rlead__text + .rlead__text {
+  margin-top: 1.3em;
+}
+
+/* ---- メッセージ ---- */
+
+/*
+ * 面を作らず、文字そのものを大きく見せる。
+ * ページで一番大きい和文にして、ここが主役だと分からせる。
+ */
+.rmsg {
+  padding-block: clamp(90px, 14vw, 190px);
+  overflow: hidden;
+}
+
+.rmsg__inner {
+  position: relative;
+}
+
+/* ---- ラベル ---- */
+.rmsg__label {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: clamp(28px, 4vw, 48px);
+}
+
+/* ラベルの左に伸びる短い線 */
+.rmsg__label-bar {
+  display: block;
+  width: clamp(40px, 6vw, 76px);
+  height: 2px;
+  background: var(--c-orange);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.9s var(--e-out) 0.1s;
+}
+
+.rmsg__inner.is-in .rmsg__label-bar {
+  transform: scaleX(1);
+}
+
+.rmsg__label-tx {
+  font-family: var(--f-en);
+  font-size: clamp(0.875rem, 1.4vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--c-orange);
+}
+
+.rmsg__text {
+  font-size: clamp(1.5rem, 4.6vw, 3.5rem);
+  font-weight: 700;
+  /* ばらけたときに行が重ならないぶんの余裕を持たせる */
+  line-height: 2.05;
+  letter-spacing: 0.02em;
+}
+
+.rmsg__row {
+  display: block;
+}
+
+/*
+ * 1 文字ぶんの器。
+ * 本体は輪郭だけ（塗りを透明にして stroke で描く）で、
+ * 疑似要素に同じ字を重ねておき、その幅を広げて塗っていく。
+ */
+.sc {
+  position: relative;
+  display: inline-block;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--c-ink);
+
+  /* 縦にばらけた状態から始める。--sc-y は JS が文字ごとに入れる */
+  transform: translateY(var(--sc-y, 0));
+  /* 塗りの終わり（遅延 0.75s + 1.15s）と揃うよう 1.9s にしてある */
+  transition: transform 1.9s var(--e-out);
+}
+
+/* 塗り。左から幅が広がって字が埋まる */
+.sc::after {
+  content: attr(data-ch);
+  position: absolute;
+  inset: 0;
+  width: 0;
+  overflow: hidden;
+  color: var(--c-ink);
+  -webkit-text-stroke: 0;
+  /* 整列しきってから塗りが追いかける */
+  transition: width 1.15s var(--e-out);
+  transition-delay: calc(var(--sc-d, 0s) + 0.75s);
+}
+
+/* 中核の一語だけ色を変えて、視線の止まりどころを作る */
+.sc--em {
+  -webkit-text-stroke-color: var(--c-navy);
+}
+
+.sc--em::after {
+  color: var(--c-navy);
+}
+
+.split-scatter.is-in .sc {
+  transform: translateY(0);
+}
+
+.split-scatter.is-in .sc::after {
+  width: 100%;
+}
+
+/* ---- 募集要項 ---- */
+
+/* 会社概要と同じ 2 カラム。見出しは左で追従する */
+.req__layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 24%) 1fr;
+  gap: clamp(24px, 4vw, 64px);
+  align-items: start;
+}
+
+/* Requirements は語が長いので、左カラムに収まるサイズに落とす */
+.req__layout .sec-head__en {
+  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+}
+
+.req__list {
+  display: grid;
+  gap: clamp(10px, 1.2vw, 14px);
+}
+
+/*
+ * 20 行あって表が縦に長いので、行ごとに監視して
+ * 画面に入ったものから順に出す。
+ * リスト単位で一度に出すと、下の行は画面外で動き終わってしまう。
+ */
+.req__row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: clamp(14px, 2vw, 28px);
+  align-items: start;
+  padding: clamp(20px, 2.4vw, 28px) clamp(20px, 2.6vw, 34px);
+  background: var(--c-bg);
+  border-radius: 12px;
+
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.85s var(--e-out), transform 0.95s var(--e-out),
+    box-shadow 0.45s var(--e-out);
+}
+
+.req__row.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.req__row:hover {
+  box-shadow: 0 10px 26px rgba(29, 29, 29, 0.07);
+}
+
+.req__row dt {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.9;
+  color: var(--c-ink-weak);
+  white-space: nowrap;
+}
+
+.req__row dd {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.9;
+  color: var(--c-ink);
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+.req__ul li + li {
+  margin-top: 6px;
+}
+
+@media (max-width: 900px) {
+  .req__layout,
+  .req__row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .rmsg__text {
+    line-height: 1.75;
+  }
+
+  .req__layout {
+    gap: clamp(24px, 5vw, 40px);
+  }
+}
+
+/* ============================================
+   NEWS / お知らせ一覧
+   ============================================ */
+
+.nlist {
+  display: grid;
+  gap: clamp(10px, 1.2vw, 14px);
+}
+
+/*
+ * 1 件 = 1 行のカード。件数が増えても一覧性が保てる。
+ * 行ごとに監視して、画面に入ったものから出す。
+ */
+.nlist__item {
+  background: var(--c-bg);
+  border-radius: 12px;
+  overflow: hidden;
+
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.85s var(--e-out), transform 0.95s var(--e-out),
+    box-shadow 0.45s var(--e-out);
+}
+
+.nlist__item.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.nlist__item:hover {
+  box-shadow: 0 12px 30px rgba(29, 29, 29, 0.08);
+}
+
+.nlist__item a {
+  display: grid;
+  grid-template-columns: clamp(140px, 18vw, 220px) 1fr auto;
+  gap: clamp(18px, 3vw, 40px);
+  align-items: center;
+  padding: clamp(16px, 2vw, 22px) clamp(18px, 2.4vw, 30px);
+  color: inherit;
+}
+
+/* ---- サムネイル ---- */
+.nlist__thumb {
+  display: block;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--c-bg-sub);
+}
+
+.nlist__thumb img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  transition: transform 0.9s var(--e-out);
+}
+
+.nlist__item:hover .nlist__thumb img {
+  transform: scale(1.06);
+}
+
+/* ---- 本文 ---- */
+.nlist__body {
+  display: block;
+  min-width: 0;
+}
+
+.nlist__title {
+  display: block;
+  font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+  font-weight: 700;
+  line-height: 1.7;
+  color: var(--c-ink);
+  transition: color 0.35s var(--e-out);
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+.nlist__item:hover .nlist__title {
+  color: var(--c-orange);
+}
+
+/* 抜粋は 1 行に収め、あふれたら省略する */
+.nlist__excerpt {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.8;
+  color: var(--c-ink-mid);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 日付 ---- */
+.nlist__date {
+  font-family: var(--f-en);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--c-ink-weak);
+  white-space: nowrap;
+}
+
+/* ---- ページ送り ---- */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: clamp(40px, 6vw, 64px);
+}
+
+.pager__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding-inline: 12px;
+  border-radius: 999px;
+  font-family: var(--f-en);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--c-ink);
+  transition: background 0.35s var(--e-out), color 0.35s var(--e-out);
+}
+
+.pager__item:hover {
+  background: rgba(29, 29, 29, 0.06);
+}
+
+.pager__item.is-current {
+  background: var(--c-navy);
+  color: #fff;
+}
+
+.pager__next {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding-inline: 18px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--c-ink);
+  transition: background 0.35s var(--e-out), color 0.35s var(--e-out);
+}
+
+.pager__next:hover {
+  background: var(--c-navy);
+  color: #fff;
+}
+
+.pager__next svg {
+  transition: transform 0.35s var(--e-out);
+}
+
+.pager__next:hover svg {
+  transform: translateX(4px);
+}
+
+@media (max-width: 700px) {
+  /* 日付をタイトルの上へ回し、2 カラムに畳む */
+  .nlist__item a {
+    grid-template-columns: 110px 1fr;
+    gap: 14px;
+  }
+
+  .nlist__date {
+    grid-column: 2;
+    grid-row: 1;
+    margin-bottom: 4px;
+  }
+
+  .nlist__body {
+    grid-column: 2;
+  }
+}
+
+/* ============================================
+   NEWS / 記事詳細（WordPress の single.php 想定）
+   ============================================ */
+
+.post__inner {
+  /* 読み物なので幅を絞る */
+  max-width: 860px;
+}
+
+/* ---- 見出し ---- */
+.post__head {
+  padding-bottom: clamp(24px, 3vw, 34px);
+  margin-bottom: clamp(32px, 4.5vw, 52px);
+  border-bottom: 1px solid var(--c-line);
+}
+
+.post__date {
+  display: block;
+  font-family: var(--f-en);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--c-orange);
+  margin-bottom: 14px;
+}
+
+.post__title {
+  font-size: clamp(1.375rem, 3.2vw, 2.125rem);
+  font-weight: 700;
+  line-height: 1.65;
+  letter-spacing: 0.02em;
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+/*
+ * 確認用の注記。タイトルのすぐ下（罫線の内側）に置く。
+ * WordPress 導入時にこの指定ごと削除してよい。
+ */
+.post__note {
+  margin-bottom: 20px;
+  font-size: clamp(1rem, 1.6vw, 1.1875rem);
+  font-weight: 700;
+  line-height: 1.85;
+  color: #d0021b;
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+/* ---- アイキャッチ ---- */
+.post__eyecatch {
+  margin-bottom: clamp(32px, 5vw, 56px);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.post__eyecatch img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---- 本文 ---- */
+/*
+ * ここから下は WordPress の投稿画面で書いた内容がそのまま出る。
+ * 使われうる要素はひととおりスタイルを当てておく。
+ */
+.post__body {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 2.1;
+  color: var(--c-ink);
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+.post__body > * + * {
+  margin-top: 1.6em;
+}
+
+.post__body h2 {
+  position: relative;
+  font-size: clamp(1.125rem, 2.2vw, 1.375rem);
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0.03em;
+  padding-left: 16px;
+  margin-top: 2.4em;
+  margin-bottom: 1em;
+}
+
+/* h2 の左にブランドカラーの縦線 */
+.post__body h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.28em;
+  width: 4px;
+  height: calc(100% - 0.5em);
+  min-height: 0.9em;
+  background: var(--c-orange);
+  border-radius: 2px;
+}
+
+.post__body h3 {
+  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  font-weight: 700;
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+  color: var(--c-navy);
+  margin-top: 2em;
+  margin-bottom: 0.8em;
+}
+
+.post__body ul,
+.post__body ol {
+  padding-left: 1.4em;
+}
+
+.post__body li {
+  list-style: disc;
+}
+
+.post__body ol > li {
+  list-style: decimal;
+}
+
+.post__body li + li {
+  margin-top: 0.5em;
+}
+
+.post__body a {
+  color: var(--c-navy);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  transition: color 0.3s var(--e-out);
+}
+
+.post__body a:hover {
+  color: var(--c-orange);
+}
+
+.post__body strong {
+  font-weight: 700;
+}
+
+/* 引用は左に線を引き、地色をわずかに変える */
+.post__body blockquote {
+  padding: clamp(18px, 2.4vw, 26px) clamp(20px, 2.8vw, 30px);
+  border-left: 3px solid var(--c-navy);
+  background: var(--c-bg);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.9375rem;
+}
+
+.post__body blockquote > * + * {
+  margin-top: 0.8em;
+}
+
+.post__body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.post__body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.post__body th,
+.post__body td {
+  padding: 12px 16px;
+  border: 1px solid var(--c-line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.post__body th {
+  background: var(--c-bg);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ---- 前後の記事 ---- */
+.post__nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: clamp(10px, 1.6vw, 18px);
+  align-items: center;
+  padding-top: clamp(32px, 4.5vw, 48px);
+  margin-top: clamp(48px, 7vw, 80px);
+  border-top: 1px solid var(--c-line);
+}
+
+.post__nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding-inline: clamp(14px, 2vw, 24px);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: background 0.35s var(--e-out), color 0.35s var(--e-out),
+    border-color 0.35s var(--e-out);
+}
+
+.post__nav-btn--prev {
+  justify-self: start;
+  background: var(--c-ink);
+  color: #fff;
+}
+
+.post__nav-btn--next {
+  justify-self: end;
+  background: var(--c-ink);
+  color: #fff;
+}
+
+.post__nav-btn--prev:hover,
+.post__nav-btn--next:hover {
+  background: var(--c-orange);
+}
+
+/* 一覧へは枠線だけにして、前後のボタンと区別する */
+.post__nav-btn--list {
+  border: 1px solid var(--c-ink);
+  color: var(--c-ink);
+}
+
+.post__nav-btn--list:hover {
+  background: var(--c-ink);
+  color: #fff;
+}
+
+/* 隣の記事がないときはグレーで無効に見せる */
+.post__nav-btn.is-disabled {
+  background: var(--c-line);
+  color: var(--c-ink-weak);
+  pointer-events: none;
+}
+
+.post__nav-btn svg {
+  flex-shrink: 0;
+  transition: transform 0.35s var(--e-out);
+}
+
+.post__nav-btn--prev:hover svg {
+  transform: translateX(-4px);
+}
+
+.post__nav-btn--next:hover svg {
+  transform: translateX(4px);
+}
+
+@media (max-width: 700px) {
+  .post__nav {
+    grid-template-columns: 1fr;
+  }
+
+  .post__nav-btn {
+    justify-self: stretch;
+  }
+}
+
+/* ---- ブロックエディタ（Gutenberg）の要素 ---- */
+/*
+ * 投稿画面で使われうるブロックの受け皿。
+ * 記事を入れたときに崩れないよう、先に定義しておく。
+ * WordPress 側のクラス名（wp-block-*）に合わせている。
+ */
+
+/* 画像＋キャプション */
+.post__body figure {
+  margin-top: 2em;
+}
+
+.post__body figcaption,
+.post__body .wp-block-image figcaption {
+  margin-top: 10px;
+  font-size: 0.8125rem;
+  line-height: 1.8;
+  color: var(--c-ink-weak);
+  text-align: center;
+}
+
+/* 区切り線 */
+.post__body hr,
+.post__body .wp-block-separator {
+  height: 1px;
+  border: 0;
+  background: var(--c-line);
+  margin-block: clamp(32px, 5vw, 56px);
+}
+
+/* ボタン */
+.post__body .wp-block-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.post__body .wp-block-button__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding-inline: 30px;
+  border-radius: 999px;
+  background: var(--c-navy);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: background 0.35s var(--e-out), transform 0.35s var(--e-out);
+}
+
+.post__body .wp-block-button__link:hover {
+  background: var(--c-orange);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* 枠線だけのボタン */
+.post__body .is-style-outline .wp-block-button__link {
+  background: transparent;
+  border: 1px solid var(--c-ink);
+  color: var(--c-ink);
+}
+
+.post__body .is-style-outline .wp-block-button__link:hover {
+  background: var(--c-ink);
+  color: #fff;
+}
+
+/* カラム */
+.post__body .wp-block-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(18px, 3vw, 36px);
+}
+
+.post__body .wp-block-column {
+  flex: 1 1 0;
+  min-width: 220px;
+}
+
+/* カラム内の先頭要素は上の余白を持たせない */
+.post__body .wp-block-column > *:first-child {
+  margin-top: 0;
+}
+
+/* 埋め込み（YouTube など）は 16:9 で収める */
+.post__body .wp-block-embed__wrapper {
+  position: relative;
+  padding-top: 56.25%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.post__body .wp-block-embed__wrapper iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* 整形済みテキスト・コード */
+.post__body pre,
+.post__body .wp-block-code {
+  padding: clamp(16px, 2.4vw, 24px);
+  border-radius: 8px;
+  background: var(--c-bg);
+  border: 1px solid var(--c-line);
+  font-size: 0.8125rem;
+  line-height: 1.9;
+  overflow-x: auto;
+}
+
+/* 表はブロック側のラッパーにも余白を合わせる */
+.post__body .wp-block-table {
+  overflow-x: auto;
+}
+
+/* 画像の配置（左寄せ・右寄せ・幅いっぱい） */
+.post__body .alignleft {
+  float: left;
+  margin: 0.4em 1.6em 1.2em 0;
+  max-width: 50%;
+}
+
+.post__body .alignright {
+  float: right;
+  margin: 0.4em 0 1.2em 1.6em;
+  max-width: 50%;
+}
+
+.post__body .aligncenter {
+  margin-inline: auto;
+}
+
+/* 回り込みを解除して、次の見出しが食い込まないようにする */
+.post__body h2,
+.post__body h3 {
+  clear: both;
+}
+
+@media (max-width: 700px) {
+  /* 狭い画面ではカラムを縦に積み、回り込みもやめる */
+  .post__body .wp-block-column {
+    flex-basis: 100%;
+  }
+
+  .post__body .alignleft,
+  .post__body .alignright {
+    float: none;
+    margin-inline: 0;
+    max-width: 100%;
+  }
+}
+
+/* ============================================
+   CONTACT / お問い合わせ
+   ============================================ */
+
+.cform__inner {
+  max-width: 1120px;
+}
+
+/* フォーム全体を白いカードに載せる */
+.cform__card {
+  padding: clamp(28px, 5vw, 60px) clamp(22px, 4.5vw, 56px);
+  background: var(--c-bg);
+  border-radius: 16px;
+}
+
+/* リード文の下だけ罫線で区切る */
+.cform__lead {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 2.05;
+  color: var(--c-ink);
+  padding-bottom: clamp(24px, 3.5vw, 36px);
+  margin-bottom: clamp(8px, 1.5vw, 16px);
+  border-bottom: 1px solid var(--c-line);
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+/* ---- 入力行 ---- */
+/*
+ * ラベル列は max-content を下限にして、項目名が必ず収まる幅を確保する。
+ * 固定幅 + nowrap だと、画面が狭いとき文字がはみ出す。
+ */
+.cform__row {
+  display: grid;
+  grid-template-columns: minmax(max-content, 210px) 1fr;
+  gap: clamp(14px, 2.4vw, 32px);
+  align-items: start;
+  padding-block: clamp(12px, 1.5vw, 17px);
+}
+
+.cform__label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 12px;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--c-ink);
+}
+
+/* 必須／任意のバッジ */
+.cform__badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding-inline: 9px;
+  border-radius: 4px;
+  background: var(--c-orange);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.cform__field input,
+.cform__field textarea {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--c-bg-sub);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.7;
+  color: var(--c-ink);
+  transition: border-color 0.3s var(--e-out), box-shadow 0.3s var(--e-out);
+}
+
+.cform__field textarea {
+  resize: vertical;
+  min-height: 160px;
+}
+
+.cform__field input::placeholder,
+.cform__field textarea::placeholder {
+  color: #b9bcc4;
+}
+
+/* 入力中は枠を紺にして、どこを触っているか分かるようにする */
+.cform__field input:focus,
+.cform__field textarea:focus {
+  outline: none;
+  background: var(--c-bg);
+  border-color: var(--c-navy);
+  box-shadow: 0 0 0 3px rgba(1, 0, 56, 0.08);
+}
+
+/* メールアドレス確認用の前に置く小さな案内 */
+.cform__sub {
+  display: block;
+  margin: 10px 0 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--c-ink-weak);
+}
+
+/* ---- 個人情報の取扱い ---- */
+/* カードの中なので、地色を一段落として区別する */
+.cform__privacy {
+  padding: clamp(16px, 2vw, 22px) clamp(18px, 2.4vw, 26px);
+  margin-top: clamp(20px, 2.8vw, 28px);
+  background: var(--c-bg-sub);
+  border-radius: 10px;
+  /* 長文なので、小さめ・詰め気味にして縦の丈を抑える */
+  font-size: 0.75rem;
+  line-height: 1.75;
+  color: var(--c-ink-mid);
+}
+
+.cform__privacy-head {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--c-ink);
+  margin-bottom: 6px;
+}
+
+.cform__privacy-list {
+  padding-left: 1.4em;
+}
+
+.cform__privacy-list li {
+  list-style: decimal;
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+.cform__privacy-list li + li {
+  margin-top: 0.7em;
+}
+
+.cform__privacy-contact {
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid var(--c-line);
+}
+
+.cform__privacy-contact p + p {
+  margin-top: 6px;
+}
+
+/* ---- 同意 ---- */
+.cform__consent {
+  display: flex;
+  justify-content: center;
+  padding-top: clamp(22px, 3vw, 30px);
+  margin-top: clamp(22px, 3vw, 30px);
+  border-top: 1px solid var(--c-line);
+}
+
+.cform__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* 素のチェックボックスは隠し、四角を自前で描く */
+.cform__check input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.cform__check-box {
+  position: relative;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--c-ink-weak);
+  border-radius: 5px;
+  background: var(--c-bg);
+  transition: background 0.3s var(--e-out), border-color 0.3s var(--e-out);
+}
+
+/* チェックの線。入るときに描かれる */
+.cform__check-box::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.28s var(--e-back);
+}
+
+.cform__check input:checked + .cform__check-box {
+  background: var(--c-navy);
+  border-color: var(--c-navy);
+}
+
+.cform__check input:checked + .cform__check-box::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.cform__check input:focus-visible + .cform__check-box {
+  box-shadow: 0 0 0 3px rgba(1, 0, 56, 0.14);
+}
+
+.cform__check-tx a {
+  color: var(--c-navy);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  transition: color 0.3s var(--e-out);
+}
+
+.cform__check-tx a:hover {
+  color: var(--c-orange);
+}
+
+/* ---- 送信ボタン ---- */
+.cform__submit {
+  margin-top: clamp(22px, 3vw, 30px);
+  text-align: center;
+}
+
+.cform__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding-inline: clamp(36px, 6vw, 62px);
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-navy);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.4s var(--e-out), transform 0.4s var(--e-out),
+    box-shadow 0.4s var(--e-out);
+}
+
+.cform__btn:hover {
+  background: var(--c-orange);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(243, 152, 0, 0.24);
+}
+
+.cform__btn svg {
+  transition: transform 0.4s var(--e-out);
+}
+
+.cform__btn:hover svg {
+  transform: translateX(5px);
+}
+
+@media (max-width: 700px) {
+  .cform__row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .cform__label {
+    padding-top: 0;
+    white-space: normal;
+  }
+}
+
+/* ---- 確認画面 / 完了画面（contact1.php） ---- */
+
+.cconf {
+  display: grid;
+  gap: clamp(10px, 1.2vw, 14px);
+}
+
+.cconf__row {
+  display: grid;
+  grid-template-columns: minmax(150px, 24%) 1fr;
+  gap: clamp(14px, 2vw, 28px);
+  align-items: start;
+  padding: clamp(18px, 2.2vw, 24px) clamp(20px, 2.6vw, 30px);
+  /* カードの中なので、地色を一段落として行を区別する */
+  background: var(--c-bg-sub);
+  border-radius: 10px;
+}
+
+.cconf__row dt {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.9;
+  color: var(--c-ink-weak);
+}
+
+.cconf__row dd {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.9;
+  color: var(--c-ink);
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+/* 送信ボタンを 2 つ並べるとき */
+.cform__submit--pair {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+/* 戻る側は控えめに */
+.cform__btn--back {
+  background: transparent;
+  border: 1px solid var(--c-ink);
+  color: var(--c-ink);
+}
+
+.cform__btn--back:hover {
+  background: var(--c-ink);
+  color: #fff;
+  box-shadow: none;
+}
+
+/* エラー表示 */
+.cform__error {
+  padding: clamp(22px, 3vw, 30px);
+  border-left: 3px solid #d0021b;
+  border-radius: 0 10px 10px 0;
+  background: rgba(208, 2, 27, 0.05);
+}
+
+.cform__error-head {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #d0021b;
+  margin-bottom: 10px;
+}
+
+.cform__error-body {
+  font-size: 0.875rem;
+  line-height: 1.95;
+  color: var(--c-ink);
+}
+
+/* 完了画面 */
+.cdone {
+  text-align: center;
+  padding-block: clamp(20px, 4vw, 40px);
+}
+
+.cdone__lead {
+  font-size: clamp(1.125rem, 2.4vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+
+.cdone__text {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 2.05;
+  color: var(--c-ink);
+  margin-bottom: clamp(32px, 5vw, 44px);
+}
+
+@media (max-width: 700px) {
+  .cconf__row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+/* ============================================
+   PRIVACY / 個人情報保護方針
+   ============================================ */
+
+.pv__inner {
+  max-width: 1120px;
+}
+
+/* ---- タブ ---- */
+.pv__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: clamp(16px, 2vw, 22px);
+}
+
+.pv__tab {
+  padding: 13px clamp(18px, 2.6vw, 30px);
+  border: 1px solid var(--c-line);
+  border-radius: 999px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--c-ink-mid);
+  cursor: pointer;
+  transition: background 0.35s var(--e-out), color 0.35s var(--e-out),
+    border-color 0.35s var(--e-out);
+}
+
+.pv__tab:hover {
+  border-color: var(--c-navy);
+  color: var(--c-navy);
+}
+
+.pv__tab.is-current {
+  background: var(--c-navy);
+  border-color: var(--c-navy);
+  color: #fff;
+}
+
+/* ---- 本文 ---- */
+.pv__card {
+  padding: clamp(26px, 4vw, 52px) clamp(22px, 3.6vw, 48px);
+  background: var(--c-bg);
+  border-radius: 16px;
+}
+
+/*
+ * 中身は既存サイトの HTML をそのまま移しているので、
+ * <span> が見出し、<br> が改行という素朴な構造になっている。
+ * それをそのまま読めるようにスタイルを当てる。
+ */
+.pv__panel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.95;
+  color: var(--c-ink);
+  line-break: strict;
+  word-break: auto-phrase;
+}
+
+.pv__panel[hidden] {
+  display: none;
+}
+
+/* 項目見出し（１．会社名 など） */
+.pv__panel span {
+  display: inline-block;
+  margin-top: 1.4em;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--c-navy);
+}
+
+/* 先頭の見出しは上余白を持たせない */
+.pv__panel > span:first-child {
+  margin-top: 0;
+}
+
+.pv__panel a {
+  color: var(--c-navy);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  transition: color 0.3s var(--e-out);
+}
+
+.pv__panel a:hover {
+  color: var(--c-orange);
+}
+
+@media (max-width: 700px) {
+  .pv__tab {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+}
