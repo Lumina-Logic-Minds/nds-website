@@ -53,6 +53,13 @@
     return PALETTE[0];
   }
 
+  /*
+   * 流線が歪んだときに寄せる色。
+   * rgba() に差し込むので、成分だけの文字列で持つ。
+   */
+  var BRAND_ORANGE = '243, 152, 0';   // #f39800（ロゴの N）
+  var BRAND_NAVY = '1, 0, 56';        // #010038（ロゴの D・S）
+
   var DOT_COUNT = 170;    // 流れる粒の数。小さく多くして「流れ」に見せる
 
   /*
@@ -73,10 +80,29 @@
   var MOUSE_R = 190;        // カーソルが流れを押しのける半径
   var MOUSE_PUSH = 54;      // 押しのける強さ（px）
 
+  /*
+   * 線を走る光。
+   *
+   * カーソルでなぞったときと同じ見た目が、
+   * ひとりでに左から右へ流れていく。
+   * 同じ「近さ」の計算を通すので、見た目は完全に一致する。
+   */
+  var RUN_R = 165;          // 光が届く範囲（px）
+  var RUN_SPEED = 520;      // 走る速さ（px/秒）
+  var RUN_GAP = 2.6;        // 次が出るまでの平均の間隔（秒）
+  var RUN_MAX = 3;          // 同時に走れる本数
+
   /* ============ 状態 ============ */
 
   var w = 0, h = 0, dpr = 1;
   var dots = [];
+  var runs = [];         // 走っている光
+  /*
+   * 次の光が出るまでの残り時間（秒）。
+   * 粒が流れはじめた直後に走ると、ロゴの描画と重なって
+   * 慌ただしいので、最初だけ少し待たせる。
+   */
+  var nextRun = 2.4;
   var mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999, has: false };
   var last = performance.now();
   var visible = true;
@@ -84,6 +110,133 @@
   var intro = 0;         // 立ち上がりの進み具合 0→1
 
   function rand(a, b) { return a + Math.random() * (b - a); }
+
+  /* ============ 線を走る光 ============ */
+
+  /**
+   * 光を進め、寿命の尽きたものを片づける。
+   *
+   * 出現は完全な等間隔にせず、間隔を毎回ばらつかせる。
+   * 規則正しく出ると仕掛けが読めてしまい、
+   * 「たまたま起きた」ように見えなくなる。
+   */
+  function updateRuns(dt) {
+    for (var i = runs.length - 1; i >= 0; i--) {
+      var r = runs[i];
+
+      r.x += r.sp * dt;
+
+      // 右端の外へ抜けきったら終わり
+      if (r.x - RUN_R > w) runs.splice(i, 1);
+    }
+
+    if (!started) return;
+
+    nextRun -= dt;
+    if (nextRun > 0) return;
+
+    // 次までの間隔。半分から 1.7 倍までばらつかせる
+    nextRun = RUN_GAP * rand(0.5, 1.7);
+
+    if (runs.length >= RUN_MAX) return;
+
+    /*
+     * どの帯を走らせるか。
+     * 直前と同じ帯が続くと目が慣れてしまうので、
+     * 既に走っている帯は選ばない。
+     */
+    var free = [];
+
+    for (var k = 0; k < LANES.length; k++) {
+      var used = false;
+
+      for (var j = 0; j < runs.length; j++) {
+        if (runs[j].lane === k) { used = true; break; }
+      }
+
+      if (!used) free.push(k);
+    }
+
+    if (!free.length) return;
+
+    var lane = free[Math.floor(Math.random() * free.length)];
+
+    runs.push({
+      lane: lane,
+      x: -RUN_R,
+      sp: RUN_SPEED * rand(0.75, 1.3),
+
+      // 走るたびに色が変わる。帯ごとの色には縛られない
+      hot: Math.random() < 0.5 ? BRAND_ORANGE : BRAND_NAVY,
+
+      // 強さも毎回変える。いつも同じ濃さだと単調になる
+      power: rand(0.72, 1)
+    });
+  }
+
+  /**
+   * その帯の、ある x 地点に掛かっている光の強さ（0〜1）。
+   *
+   * カーソルの nearAt と同じ形の減衰にしてあるので、
+   * なぞったときと同じ見た目になる。
+   */
+  function runAt(laneIndex, x) {
+    var best = 0;
+
+    for (var i = 0; i < runs.length; i++) {
+      var r = runs[i];
+      if (r.lane !== laneIndex) continue;
+
+      var d = Math.abs(x - r.x);
+      if (d > RUN_R) continue;
+
+      var f = 1 - d / RUN_R;
+      f = f * f * r.power;
+
+      if (f > best) best = f;
+    }
+
+    return best;
+  }
+
+  /** その地点を照らしている、いちばん強い光の色 */
+  function runColorAt(laneIndex, x) {
+    var best = 0;
+    var col = BRAND_ORANGE;
+
+    for (var i = 0; i < runs.length; i++) {
+      var r = runs[i];
+      if (r.lane !== laneIndex) continue;
+
+      var d = Math.abs(x - r.x);
+      if (d > RUN_R) continue;
+
+      var f = 1 - d / RUN_R;
+      f = f * f * r.power;
+
+      if (f > best) { best = f; col = r.hot; }
+    }
+
+    return col;
+  }
+
+  /**
+   * その帯で、いちばん近い光までの距離。
+   * 刻み幅を細かくする範囲を決めるのに使う。
+   */
+  function runDist(laneIndex, x) {
+    var best = Infinity;
+
+    for (var i = 0; i < runs.length; i++) {
+      var r = runs[i];
+      if (r.lane !== laneIndex) continue;
+
+      var d = Math.abs(x - r.x);
+      if (d < best) best = d;
+    }
+
+    return best;
+  }
 
   /* ============ 流線 ============ */
 
@@ -192,28 +345,134 @@
   /**
    * 流線そのもの。
    *
-   * ほとんど見えるか見えないかの細さで引く。
+   * 普段はほとんど見えるか見えないかの細さで引く。
    * 粒がなぜその軌跡を通るのかが無意識に伝わればよく、
    * 線として主張させたいわけではない。
+   *
+   * ただしカーソルに歪められている区間と、
+   * 光が走っている区間だけは、ブランド色（オレンジ・紺）へ
+   * 寄せて濃く太くする。
    */
   function drawLanes(t) {
-    ctx.lineWidth = 1;
+    ctx.lineCap = 'round';
 
     for (var i = 0; i < LANES.length; i++) {
       var lane = LANES[i];
 
+      /*
+       * カーソルで色づくときの色。
+       * 隣り合う帯が同じ色にならないよう交互にする。
+       * 走る光は自前の色を持つので、こちらには縛られない。
+       */
+      var hot = i % 2 ? BRAND_ORANGE : BRAND_NAVY;
+
+      /*
+       * 歪んでいない区間は色も太さも全く同じなので、
+       * 1 本の経路にまとめて一度で描く。
+       * 区間ごとに stroke すると、1 フレームに 800 回を超える。
+       */
+      ctx.strokeStyle = 'rgba(29, 29, 29, ' + (0.05 * intro).toFixed(3) + ')';
+      ctx.lineWidth = 1;
       ctx.beginPath();
 
-      for (var x = -10; x <= w + 10; x += 14) {
-        var y = laneY(lane, x, t) + pushY(x, laneY(lane, x, t));
+      var px = 0, py = 0, pf = 0, pc = hot;
+      var hotSegs = null;
 
-        if (x <= -10) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+      /*
+       * 刻み幅。
+       *
+       * 帯のうねりは緩やかなので粗くてよいが、カーソルの近くだけは
+       * 曲がりが急で、粗いままだと折れ線に見えてしまう。
+       * その範囲に入っている間は細かく刻む。
+       */
+      for (var x = -10; x <= w + 10; ) {
+        var base = laneY(lane, x, t);
+
+        var f = pushAt(x, base);
+        var y = base + f * MOUSE_PUSH;
+
+        // 色と太さは、ずれの量ではなくカーソルへの近さで決める
+        var cur = nearAt(x, base);
+        var col = hot;
+
+        /*
+         * 走っている光。カーソルより強ければ、そちらの色にする。
+         * 混ぜると濁るので、強いほうだけを採る。
+         */
+        var rf = runAt(i, x);
+
+        if (rf > cur) {
+          cur = rf;
+          col = runColorAt(i, x);
+        }
+
+        if (x > -10) {
+          /*
+           * 区間の見た目は、両端の強いほうで決める。
+           * 弱いほうに合わせると、色の境目が
+           * 影響の縁より内側に寄って見える。
+           */
+          var s = Math.max(pf, cur);
+          var sc = pf > cur ? pc : col;
+
+          if (s < 0.01) {
+            // 素のまま。まとめ描き用の経路に足す
+            ctx.moveTo(px, py);
+            ctx.lineTo(x, y);
+          } else {
+            // 色づいている区間は後から個別に描く
+            (hotSegs || (hotSegs = [])).push(px, py, x, y, s, sc);
+          }
+        }
+
+        px = x;
+        py = y;
+        pf = cur;
+        pc = col;
+
+        /*
+         * カーソルや光の近くでは細かく、外では粗く進める。
+         * 境目で刻みが急に変わらないよう、距離に応じて連続的に変える。
+         *
+         * 光の縁も色が切り替わる境目なので、
+         * 粗いままだと色の段差が階段状に見えてしまう。
+         */
+        var near = mouse.has
+          ? Math.max(0, 1 - Math.abs(x - mouse.x) / (MOUSE_R * 1.3))
+          : 0;
+
+        if (runs.length) {
+          near = Math.max(
+            near,
+            Math.max(0, 1 - runDist(i, x) / (RUN_R * 1.3))
+          );
+        }
+
+        x += 14 - near * 10;
       }
 
-      // 立ち上がりに合わせて薄く現れる
-      ctx.strokeStyle = 'rgba(29, 29, 29, ' + (0.05 * intro).toFixed(3) + ')';
       ctx.stroke();
+
+      /*
+       * 歪んでいる区間。強いほど濃く太くする。
+       * グレーからブランド色へ徐々に移すのではなく
+       * 濃さで見せるので、色が濁らない。
+       */
+      if (hotSegs) {
+        for (var k = 0; k < hotSegs.length; k += 6) {
+          var st = hotSegs[k + 4];
+
+          ctx.strokeStyle =
+            'rgba(' + hotSegs[k + 5] + ', ' +
+            ((0.05 + st * 0.75) * intro).toFixed(3) + ')';
+          ctx.lineWidth = 1 + st * 3.4;
+
+          ctx.beginPath();
+          ctx.moveTo(hotSegs[k], hotSegs[k + 1]);
+          ctx.lineTo(hotSegs[k + 2], hotSegs[k + 3]);
+          ctx.stroke();
+        }
+      }
     }
   }
 
@@ -224,6 +483,44 @@
    * 上下どちら側にいるかで押しのける向きを変える。
    */
   function pushY(x, y) {
+    return pushAt(x, y) * MOUSE_PUSH;
+  }
+
+  /**
+   * その地点が、カーソルにどれだけ歪められているか。
+   *
+   * 押しのけの量そのものではなく -1〜1 の強さを返す。
+   * 線の色づきにも同じ値を使うので、
+   * 歪みと色が必ず一致する。
+   *
+   * 向きを dy の符号で決めると、カーソルが線に重なったところで
+   * 上下が反転し、線が縦に切れて段差になる。
+   * 符号ではなく、カーソルからの縦のずれになめらかに比例させ、
+   * 重なった点では押しのけ量が 0 になるようにする。
+   */
+  /**
+   * その地点がカーソルにどれだけ近いか（0〜1）。
+   *
+   * 押しのけ量はカーソルの真上で 0 になるが、
+   * 色と太さまで細らせると、いちばん見られている
+   * 真下の区間だけ痩せて見えてしまう。
+   * 見た目の強さは、ずれではなく距離だけで決める。
+   */
+  function nearAt(x, y) {
+    if (!mouse.has) return 0;
+
+    var dx = x - mouse.x;
+    var dy = y - mouse.y;
+    var d = Math.sqrt(dx * dx + dy * dy);
+
+    if (d > MOUSE_R) return 0;
+
+    var f = 1 - d / MOUSE_R;
+
+    return f * f;
+  }
+
+  function pushAt(x, y) {
     if (!mouse.has) return 0;
 
     var dx = x - mouse.x;
@@ -236,7 +533,17 @@
     var f = 1 - d / MOUSE_R;
     f = f * f;
 
-    return (dy >= 0 ? 1 : -1) * f * MOUSE_PUSH;
+    /*
+     * 向きと強さ。dy / MOUSE_R は -1〜1 の連続値で、
+     * カーソルのちょうど上では 0 になる。
+     * これに掛けることで、反転による段差が生まれない。
+     *
+     * ずれが小さいうちに押しのけが立ち上がるよう、
+     * 縦のずれは範囲の半分で頭打ちにする。
+     */
+    var dir = Math.max(-1, Math.min(1, dy / (MOUSE_R * 0.5)));
+
+    return dir * f;
   }
 
   function drawDot(dot, t, dt) {
@@ -327,6 +634,7 @@
 
     ctx.clearRect(0, 0, w, h);
 
+    updateRuns(dt);
     drawLanes(t);
 
     for (var i = 0; i < dots.length; i++) {

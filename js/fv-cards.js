@@ -40,6 +40,36 @@
   var clock = null;
   var elapsed = 0;
 
+  /*
+   * カーソル。画面座標ではなく、カードと同じ 3D 空間の座標で持つ。
+   * has が false の間は誰にも力が掛からない。
+   */
+  var mouse = { x: 0, y: 0, nx: 0, ny: 0, has: false };
+
+  var PUSH_R = 3.4;      // 力が届く範囲（3D 単位）
+
+  /*
+   * 押しのけはごく僅かに留める。
+   * カードは逃げるのではなく、その場で少し向きを変えて反応する。
+   */
+  var PUSH_F = 3.2;      // 押す力の強さ
+  var SPRING = 7.0;      // 元の位置へ戻ろうとする強さ
+  var DAMP = 3.4;        // 速度の減衰。大きいほど早く落ち着く
+
+  /*
+   * 回転の反応。カーソルのある側へ、少しだけ傾いて向く。
+   * TILT_MAX を超えて回らないので、大きく振り回されることはない。
+   */
+  var TILT_MAX = 0.46;    // 押されて増える傾きの上限（ラジアン, 0.46 ≒ 26度）
+
+  /*
+   * ゆっくり向きを変えるほど滑らかに見える。
+   * ばねを弱めると同時に減衰も緩め、
+   * 行き過ぎて戻る揺り返しが穏やかに出るようにする。
+   */
+  var TILT_SPRING = 14;   // 目標の傾きへ向かう強さ
+  var TILT_DAMP = 4.6;    // 傾きの減衰
+
   function rand(a, b) { return a + Math.random() * (b - a); }
 
   /* ---------- カード形状 ---------- */
@@ -148,20 +178,30 @@
    * 横位置は画面の外から入ってくる。
    */
   function placeCard(mesh, lane, initial) {
-    mesh.position.z = rand(-2.2, 0.6);
+    /*
+     * 流れとしての位置は base に持ち、カーソルで押された
+     * ぶんのズレ（o*）を足したものを実際の position にする。
+     * 両者を分けておかないと、押されたズレが流れに溶けて
+     * 元の位置へ戻れなくなる。
+     */
+    var bz = rand(-2.2, 0.6);
 
     // 奥行きによって見える高さが変わるので、カードの z で測る
-    var vh = viewHeight(mesh.position.z);
+    var vh = viewHeight(bz);
     var lh = (vh * 1.02) / LANES;
     var ly = -vh * 0.51 + lh * (lane + 0.5);
 
-    mesh.position.y = ly + rand(-lh * 0.18, lh * 0.18);
+    var side = viewWidth(bz) / 2 + CARD_W;
 
-    var side = viewWidth(mesh.position.z) / 2 + CARD_W;
+    mesh.userData.baseZ = bz;
+    mesh.userData.baseY = ly + rand(-lh * 0.18, lh * 0.18);
+    mesh.userData.baseX = initial ? rand(-side, side) : -side;
 
-    mesh.position.x = initial
-      ? rand(-side, side)
-      : -side;
+    mesh.position.set(
+      mesh.userData.baseX,
+      mesh.userData.baseY,
+      bz
+    );
 
     mesh.userData.vx = rand(0.5, 0.9);
 
@@ -171,9 +211,9 @@
      * 流れに乗って滑っていく見せ方なので、
      * 舞い上がる旧実装より振り幅を抑え、ゆっくり傾かせる。
      */
-    mesh.userData.ax = rand(0.30, 0.62);
-    mesh.userData.ay = rand(0.42, 0.78);
-    mesh.userData.az = rand(0.14, 0.34);
+    mesh.userData.ax = rand(0.20, 0.42);
+    mesh.userData.ay = rand(0.28, 0.54);
+    mesh.userData.az = rand(0.10, 0.24);
 
     // 速さ
     mesh.userData.sx = rand(0.26, 0.52);
@@ -182,6 +222,33 @@
     mesh.userData.px = Math.random() * Math.PI * 2;
     mesh.userData.py = Math.random() * Math.PI * 2;
     mesh.userData.pz = Math.random() * Math.PI * 2;
+
+    /*
+     * カーソルに押されたときのズレと、その速度。
+     *
+     * 粒のように目標値へ直接寄せると弾かれたように動いてしまう。
+     * カードは厚みのある物体として見せたいので、速度を持たせ、
+     * 力を加えて動かす。押されてから動き出すまでに一拍あり、
+     * 離れたあとも慣性で流れてからゆっくり戻る。
+     */
+    mesh.userData.ox = 0;
+    mesh.userData.oy = 0;
+    mesh.userData.oz = 0;
+    mesh.userData.ovx = 0;
+    mesh.userData.ovy = 0;
+    mesh.userData.ovz = 0;
+
+    // 押されて傾く量と、その速度
+    mesh.userData.tiltX = 0;
+    mesh.userData.tiltY = 0;
+    mesh.userData.tvx = 0;
+    mesh.userData.tvy = 0;
+
+    /*
+     * 重さ。軽いカードほど大きく速く動く。
+     * 全部が同じだと、群れが一斉に同じ動きをして嘘っぽくなる。
+     */
+    mesh.userData.mass = rand(0.78, 1.35);
     mesh.userData.lane = lane;
   }
 
@@ -318,17 +385,112 @@
       var m = cards[i];
       var u = m.userData;
 
-      if (started) m.position.x += u.vx * dt;
+      if (started) u.baseX += u.vx * dt;
 
       // 画面右へ抜けたら左から出し直す
-      if (m.position.x > viewWidth(m.position.z) / 2 + CARD_W) {
+      if (u.baseX > viewWidth(u.baseZ) / 2 + CARD_W) {
         placeCard(m, u.lane, false);
       }
 
-      // 正面を中心に往復。裏返らないので文字が読める
-      m.rotation.x = Math.sin(t * u.sx + u.px) * u.ax;
-      m.rotation.y = Math.sin(t * u.sy + u.py) * u.ay;
-      m.rotation.z = Math.sin(t * u.sz + u.pz) * u.az;
+      /*
+       * カーソルから受ける力。
+       *
+       * 位置はほとんど動かさない。カードはその場に留まったまま、
+       * 少しだけ向きを変えることで反応を返す。
+       */
+      var fx = 0, fy = 0, fz = 0, near = 0;
+
+      // 押されて向く先（傾きの目標値）
+      var tgX = 0, tgY = 0;
+
+      if (mouse.has) {
+        // カードの現在位置（ズレ込み）とカーソルの距離
+        var dx = (u.baseX + u.ox) - mouse.x;
+        var dy = (u.baseY + u.oy) - mouse.y;
+        var d = Math.sqrt(dx * dx + dy * dy);
+
+        if (d < PUSH_R) {
+          // 中心で 1、縁で 0。二乗で落として近いほど強くする
+          var f = 1 - d / PUSH_R;
+          f = f * f;
+
+          near = f;
+
+          // 押しのける向き。真上に重なったときは動かさない
+          if (d > 0.0001) {
+            var s = (PUSH_F * f) / u.mass;
+
+            fx = (dx / d) * s;
+            fy = (dy / d) * s;
+
+            /*
+             * 傾きの目標。カーソルのある側へ面を向ける。
+             *
+             * 距離で正規化した向きに上限を掛けるので、
+             * どれだけ近づいても TILT_MAX 以上には回らない。
+             * 重いカードほど傾きが浅くなる。
+             */
+            var tilt = (TILT_MAX * f) / u.mass;
+
+            tgY = -(dx / d) * tilt;
+            tgX = (dy / d) * tilt;
+          }
+
+          // 押されたぶんだけ、わずかに手前へ浮き上がる
+          fz = (PUSH_F * 0.5 * f) / u.mass;
+        }
+      }
+
+      /*
+       * ばね：元の位置（ズレ 0）へ引き戻す。
+       * 減衰：速度を殺して、いつまでも揺れ続けないようにする。
+       */
+      u.ovx += (fx - u.ox * SPRING) * dt;
+      u.ovy += (fy - u.oy * SPRING) * dt;
+      u.ovz += (fz - u.oz * SPRING) * dt;
+
+      var damp = Math.max(0, 1 - DAMP * dt);
+
+      u.ovx *= damp;
+      u.ovy *= damp;
+      u.ovz *= damp;
+
+      u.ox += u.ovx * dt;
+      u.oy += u.ovy * dt;
+      u.oz += u.ovz * dt;
+
+      m.position.x = u.baseX + u.ox;
+      m.position.y = u.baseY + u.oy;
+      m.position.z = u.baseZ + u.oz;
+
+      /*
+       * 傾き。目標の向きへ、ばねで滑らかに寄せる。
+       *
+       * 目標そのものに上限があるので、振り回されることはない。
+       * 減衰を効かせて、行き過ぎてから静かに落ち着かせる。
+       */
+      var tdamp = Math.max(0, 1 - TILT_DAMP * dt);
+
+      u.tvx += (tgX - u.tiltX) * TILT_SPRING * dt;
+      u.tvy += (tgY - u.tiltY) * TILT_SPRING * dt;
+
+      u.tvx *= tdamp;
+      u.tvy *= tdamp;
+
+      u.tiltX += u.tvx * dt;
+      u.tiltY += u.tvy * dt;
+
+      /*
+       * 常時の往復に、押された分の傾きを足す。
+       *
+       * カーソルが近いあいだは往復の振り幅を抑える。
+       * 手を当てられた板が、ふらつきを止めて正対する感じになる。
+       */
+      var calm = 1 - near * 0.55;
+
+      m.rotation.x = Math.sin(t * u.sx + u.px) * u.ax * calm + u.tiltX;
+      m.rotation.y = Math.sin(t * u.sy + u.py) * u.ay * calm + u.tiltY;
+      m.rotation.z = Math.sin(t * u.sz + u.pz) * u.az * calm;
     }
 
     renderer.render(scene, camera);
@@ -341,6 +503,39 @@
   window.addEventListener('resize', function () {
     clearTimeout(rt);
     rt = setTimeout(resize, 180);
+  });
+
+  /**
+   * カーソルを 3D 空間の座標に直す。
+   *
+   * カードは z = -2.2 〜 0.6 に散らばっているが、
+   * 面ごとに測り直すと重いので、中ほどの平面で代表させる。
+   */
+  function toWorld(px, py) {
+    if (!camera) return;
+
+    // -1 〜 1 に正規化（画面中央が 0）
+    mouse.nx = (px / w) * 2 - 1;
+    mouse.ny = -((py / h) * 2 - 1);
+
+    var z = -0.8;
+    var vh = viewHeight(z);
+
+    mouse.x = (mouse.nx * vh * camera.aspect) / 2;
+    mouse.y = (mouse.ny * vh) / 2;
+  }
+
+  window.addEventListener('mousemove', function (e) {
+    var rect = canvas.getBoundingClientRect();
+
+    toWorld(e.clientX - rect.left, e.clientY - rect.top);
+    mouse.has = true;
+  }, { passive: true });
+
+  // 画面の外へ出たら力を切る。押されていたカードは自然に戻る
+  window.addEventListener('mouseout', function (e) {
+    if (e.relatedTarget) return;
+    mouse.has = false;
   });
 
   if ('IntersectionObserver' in window) {
