@@ -4,6 +4,10 @@
  * 画面をゆるやかな曲線の流れ場が左から右へ横切り、
  * 粒はその流線に乗って運ばれる。
  *
+ * 下地には整列したドット格子を敷く。普段はほとんど無地だが、
+ * カーソルが近づくと押しのけられ、色づいて散る。
+ * 流れる粒が「動」、格子が「静」の役目を持つ。
+ *
  * 中央から放射する波紋と粒（旧実装）をやめ、
  * 「一定方向へ流れる」規律のある動きに置き換えている。
  * カーソルの周囲では流れが押しのけられ、局所的に歪む。
@@ -73,10 +77,25 @@
   var MOUSE_R = 190;        // カーソルが流れを押しのける半径
   var MOUSE_PUSH = 54;      // 押しのける強さ（px）
 
+  /*
+   * 下地のドット格子。
+   *
+   * 普段は整列していて、ほとんど無地に見える。
+   * カーソルが近づいた分だけ押しのけられ、色づいて散る。
+   * 流れる粒（動）に対して、こちらは静の役目を持つ。
+   */
+  var GRID_GAP = 34;        // 格子の間隔（px）
+  var GRID_R = 1.25;        // 静止時の半径
+  var GRID_ALPHA = 0.16;    // 静止時の濃さ
+  var GRID_R2 = 240;        // 反応する半径
+  var GRID_PUSH = 46;       // 押しのけられる最大量（px）
+  var GRID_EASE = 5.2;      // 元の位置へ戻る速さ
+
   /* ============ 状態 ============ */
 
   var w = 0, h = 0, dpr = 1;
   var dots = [];
+  var grid = [];
   var mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999, has: false };
   var last = performance.now();
   var visible = true;
@@ -171,6 +190,131 @@
     }
   }
 
+  /* ============ 下地の格子 ============ */
+
+  /**
+   * 画面いっぱいに等間隔で並べる。
+   *
+   * 端に半端な余りが出ると目立つので、画面幅から個数を割り出し、
+   * 余白を左右へ均等に振り分けて中央に揃える。
+   */
+  function buildGrid() {
+    grid = [];
+
+    var cols = Math.floor(w / GRID_GAP);
+    var rows = Math.floor(h / GRID_GAP);
+
+    if (cols < 2 || rows < 2) return;
+
+    var ox = (w - (cols - 1) * GRID_GAP) / 2;
+    var oy = (h - (rows - 1) * GRID_GAP) / 2;
+
+    for (var j = 0; j < rows; j++) {
+      for (var i = 0; i < cols; i++) {
+        grid.push({
+          // 本来の位置。押しのけられてもここへ戻る
+          hx: ox + i * GRID_GAP,
+          hy: oy + j * GRID_GAP,
+
+          // 実際に描かれる位置のずれ
+          dx: 0,
+          dy: 0,
+
+          // 反応の強さ 0〜1。色と大きさに効く
+          on: 0
+        });
+      }
+    }
+  }
+
+  /**
+   * 格子を描く。
+   *
+   * カーソルから遠い点は、ごく薄いグレーの小さな点のまま。
+   * 近い点ほど外へ押しのけられ、大きく、ブランド色へ寄る。
+   * 離れると ばね のように元の位置と色へ戻る。
+   */
+  function drawGrid(dt) {
+    if (!grid.length) return;
+
+    /*
+     * 静止している点は、色も大きさも全く同じになる。
+     * 1 つずつ塗ると数千回の描画になるため、
+     * 動いていない点はまとめて 1 パスで塗る。
+     */
+    ctx.fillStyle = '#1d1d1d';
+    ctx.globalAlpha = GRID_ALPHA * intro;
+    ctx.beginPath();
+
+    var active = [];
+
+    for (var i = 0; i < grid.length; i++) {
+      var g = grid[i];
+
+      var tx = 0, ty = 0, target = 0;
+
+      if (mouse.has) {
+        var vx = g.hx - mouse.x;
+        var vy = g.hy - mouse.y;
+        var d = Math.sqrt(vx * vx + vy * vy);
+
+        if (d < GRID_R2) {
+          // 中心で 1、縁で 0。二乗で落として中心付近を強くする
+          var f = 1 - d / GRID_R2;
+          f = f * f;
+
+          target = f;
+
+          // 押しのける向き。真上に重なった時は動かさない
+          if (d > 0.001) {
+            tx = (vx / d) * f * GRID_PUSH;
+            ty = (vy / d) * f * GRID_PUSH;
+          }
+        }
+      }
+
+      // 目標値へ寄せる。離れれば自然に戻る
+      var k = Math.min(1, dt * GRID_EASE);
+
+      g.dx += (tx - g.dx) * k;
+      g.dy += (ty - g.dy) * k;
+      g.on += (target - g.on) * k;
+
+      if (g.on < 0.004 && Math.abs(g.dx) < 0.4 && Math.abs(g.dy) < 0.4) {
+        g.dx = g.dy = g.on = 0;
+      }
+
+      // 反応している点は後でまとめて描く
+      if (g.on > 0.02) {
+        active.push(g, i);
+        continue;
+      }
+
+      // 静止している点。同じ色・同じ大きさなので 1 つの経路に足す
+      ctx.moveTo(g.hx + GRID_R, g.hy);
+      ctx.arc(g.hx, g.hy, GRID_R, 0, Math.PI * 2);
+    }
+
+    ctx.fill();
+
+    /*
+     * 反応した点。ブランド色へ寄せ、大きく濃くする。
+     * 常時グレーだと下地に徹しすぎて、動かした時の発見が弱い。
+     */
+    for (var k = 0; k < active.length; k += 2) {
+      var a = active[k];
+
+      ctx.fillStyle = active[k + 1] % 2 ? '#f39800' : '#010038';
+      ctx.globalAlpha = Math.min(1, (GRID_ALPHA + a.on * 0.5) * intro);
+
+      ctx.beginPath();
+      ctx.arc(a.hx + a.dx, a.hy + a.dy, GRID_R * (1 + a.on * 2.1), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
   /* ============ サイズ ============ */
 
   function resize() {
@@ -185,6 +329,7 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     build();
+    buildGrid();
   }
 
   /* ============ 描画 ============ */
@@ -327,6 +472,8 @@
 
     ctx.clearRect(0, 0, w, h);
 
+    // 下地 → 流線 → 流れる粒 の順に重ねる
+    drawGrid(dt);
     drawLanes(t);
 
     for (var i = 0; i < dots.length; i++) {
