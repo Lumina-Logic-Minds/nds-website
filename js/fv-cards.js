@@ -1,11 +1,11 @@
 /**
  * FV の 3D カード（Three.js / WebGL）
  *
- * 参考の日テレアートと同じく WebGL で描く。
  * 厚みのある箱に事業バナーを貼り、光源による陰影と
  * 前後関係を GPU に処理させることで、板が本物のカードに見える。
  *
- * 背景の波紋とカラフルな円は fv-scene.js（Canvas 2D）が担当。
+ * 粒（fv-scene.js）と同じく左から右へ流れ、
+ * 流れに乗って滑るようにゆっくり傾く。
  */
 (function () {
   'use strict';
@@ -28,7 +28,7 @@
     { src: 'image/tokyo.png',          edge: 0xc0574c }  // アカデミーの赤
   ];
 
-  var LANES = 5;             // 横位置の帯（＝同時に出る枚数）
+  var LANES = 4;             // 縦位置の帯（＝同時に出る枚数）
   var CARD_W = 2.7;          // カードの幅（3D 空間の単位）
   var CARD_H = CARD_W * (422 / 750);
   var CARD_D = 0.03;         // 厚み
@@ -141,34 +141,44 @@
 
   /* ---------- カード ---------- */
 
+  /**
+   * カードを配置する。
+   *
+   * 粒と同じく左から右へ流れるので、帯（lane）は縦位置を決め、
+   * 横位置は画面の外から入ってくる。
+   */
   function placeCard(mesh, lane, initial) {
     mesh.position.z = rand(-2.2, 0.6);
 
-    // 奥行きによって見える幅が変わるので、カードの z で測る
-    var vw = viewWidth(mesh.position.z);
-    var lw = (vw * 1.08) / LANES;
-    var lx = -vw * 0.54 + lw * (lane + 0.5);
+    // 奥行きによって見える高さが変わるので、カードの z で測る
+    var vh = viewHeight(mesh.position.z);
+    var lh = (vh * 1.02) / LANES;
+    var ly = -vh * 0.51 + lh * (lane + 0.5);
 
-    mesh.position.x = lx + rand(-lw * 0.2, lw * 0.2);
+    mesh.position.y = ly + rand(-lh * 0.18, lh * 0.18);
 
-    var top = viewHeight(mesh.position.z) / 2 + CARD_H;
+    var side = viewWidth(mesh.position.z) / 2 + CARD_W;
 
-    mesh.position.y = initial
-      ? rand(-top, top)
-      : -top;
+    mesh.position.x = initial
+      ? rand(-side, side)
+      : -side;
 
-    mesh.userData.vy = rand(0.55, 0.95);
+    mesh.userData.vx = rand(0.5, 0.9);
 
-    // 各軸を正面中心に往復させる（裏返らないので文字が読める）
-    // 振り幅（ラジアン）。1.3 ≒ 75度まで倒れる
-    mesh.userData.ax = rand(0.7, 1.3);
-    mesh.userData.ay = rand(0.8, 1.35);
-    mesh.userData.az = rand(0.3, 0.7);
+    /*
+     * 各軸を正面中心に往復させる（裏返らないので文字が読める）。
+     *
+     * 流れに乗って滑っていく見せ方なので、
+     * 舞い上がる旧実装より振り幅を抑え、ゆっくり傾かせる。
+     */
+    mesh.userData.ax = rand(0.30, 0.62);
+    mesh.userData.ay = rand(0.42, 0.78);
+    mesh.userData.az = rand(0.14, 0.34);
 
     // 速さ
-    mesh.userData.sx = rand(0.45, 0.95);
-    mesh.userData.sy = rand(0.5, 1.05);
-    mesh.userData.sz = rand(0.3, 0.7);
+    mesh.userData.sx = rand(0.26, 0.52);
+    mesh.userData.sy = rand(0.30, 0.60);
+    mesh.userData.sz = rand(0.18, 0.40);
     mesh.userData.px = Math.random() * Math.PI * 2;
     mesh.userData.py = Math.random() * Math.PI * 2;
     mesh.userData.pz = Math.random() * Math.PI * 2;
@@ -308,10 +318,10 @@
       var m = cards[i];
       var u = m.userData;
 
-      if (started) m.position.y += u.vy * dt;
+      if (started) m.position.x += u.vx * dt;
 
-      // 画面上へ抜けたら下から出し直す
-      if (m.position.y > viewHeight(m.position.z) / 2 + CARD_H) {
+      // 画面右へ抜けたら左から出し直す
+      if (m.position.x > viewWidth(m.position.z) / 2 + CARD_W) {
         placeCard(m, u.lane, false);
       }
 
