@@ -99,8 +99,8 @@ def rewrite_urls(html, src):
             return f'{attr}="{php_url(f"nds_asset_url( {val!r} )")}"'
 
         if val == 'contact1.php':
-            # フォームの送信先。contact1.php は WordPress と同じ階層に置く
-            expr = "home_url( '/contact1.php' )"
+            # フォームの送信先。WordPress 版ではお問い合わせページ自身が受け付ける（inc/contact.php）
+            expr = "nds_page_url( 'contact' )"
             return f'{attr}="{php_url(expr)}"'
 
         return m.group(0)
@@ -209,10 +209,19 @@ def main():
     # 3-4. page-{スラッグ}.php
     for slug in PAGE_TEMPLATES:
         name = f'{slug}.html'
+        main = main_block(read(name), name)
+
+        if slug == 'contact':
+            # フォームの直後に nonce とハニーポットを差し込む
+            form = re.search(r'<form [^>]*id="contactForm"[^>]*>', main)
+            if not form:
+                sys.exit('[error] contact.html: <form id="contactForm"> が見つかりません')
+            main = main[:form.end()] + '\n<?php nds_contact_hidden_fields(); ?>' + main[form.end():]
+
         page_php = (
             GENERATED_NOTE.format(src=name)
             + '<?php get_header(); ?>\n\n'
-            f'  {main_block(read(name), name)}\n\n'
+            f'  {main}\n\n'
             '<?php get_footer(); ?>\n'
         )
         (OUT / f'page-{slug}.php').write_text(rewrite_urls(page_php, f'page-{slug}.php'), encoding='utf-8')

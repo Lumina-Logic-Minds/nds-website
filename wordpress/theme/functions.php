@@ -15,6 +15,7 @@ define( 'NDS_SITE_NAME', '株式会社Next Days Solutions' );
 require_once get_theme_file_path( 'inc/page-meta.php' );
 require_once get_theme_file_path( 'inc/template-tags.php' );
 require_once get_theme_file_path( 'inc/setup.php' );
+require_once get_theme_file_path( 'inc/contact.php' );
 
 
 /* ============================================

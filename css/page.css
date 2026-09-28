@@ -2037,6 +2037,18 @@ a.srv:hover .srv__media img {
   color: var(--c-ink);
 }
 
+/*
+ * ボット除けの隠し欄（WordPress 版で出力）。
+ * display:none だと無視するボットがいるので、画面の外へ逃がして見えなくする
+ */
+.cform__hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 /* 完了画面 */
 .cdone {
   text-align: center;
