@@ -21,11 +21,17 @@
    * 事業バナーと、その厚み（小口）の色。
    * 各画像の主要な色に合わせると、立体感がはっきり出る。
    */
+  /*
+   * 画像の置き場所。静的 HTML ではページと同じ階層（空文字）、
+   * WordPress ではテーマのフォルダ（functions.php が NDS_THEME_URI を渡す）。
+   */
+  var BASE = window.NDS_THEME_URI || '';
+
   var CARDS = [
-    { src: 'image/hataraku_logo1.png', edge: 0x0d2a3a }, // 夜空の紺
-    { src: 'image/nfree_logo1.png',    edge: 0x2fae7f }, // N-Free の緑
-    { src: 'image/dx_logo.png',        edge: 0x7b6fd0 }, // DX研修の紫
-    { src: 'image/tokyo.png',          edge: 0xc0574c }  // アカデミーの赤
+    { src: BASE + 'image/hataraku_logo1.png', edge: 0x0d2a3a }, // 夜空の紺
+    { src: BASE + 'image/nfree_logo1.png',    edge: 0x2fae7f }, // N-Free の緑
+    { src: BASE + 'image/dx_logo.png',        edge: 0x7b6fd0 }, // DX研修の紫
+    { src: BASE + 'image/tokyo.png',          edge: 0xc0574c }  // アカデミーの赤
   ];
 
   var LANES = 4;             // 縦位置の帯（＝同時に出る枚数）

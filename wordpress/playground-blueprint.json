@@ -1,0 +1,9 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "preferredVersions": { "php": "8.3", "wp": "latest" },
+  "steps": [
+    { "step": "setSiteLanguage", "language": "ja" },
+    { "step": "activateTheme", "themeFolderName": "nds" },
+    { "step": "runPHP", "code": "<?php require '/wordpress/wp-load.php'; nds_initial_setup();" }
+  ]
+}

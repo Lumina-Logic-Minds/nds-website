@@ -5,3 +5,9 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# WordPress テーマの生成物（tools/build_theme.py）
+dist/
+
+# 作業メモ（サーバー情報を含むので公開リポジトリに入れない）
+docs/PROGRESS.md
