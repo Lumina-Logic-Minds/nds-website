@@ -1196,6 +1196,101 @@
   }
 }
 
+/*
+ * スマホ・タブレットで自動で流す版（contents-rail.js が .is-flow を付ける）
+ * 動きを減らす設定のときは .is-flow が付かず、上の「素直に横スクロール」のまま。
+ */
+.contents.is-flow {
+  overflow: hidden;
+}
+
+/* 円はセクションの中央から広がる。セクションからははみ出させない */
+.contents.is-flow .contents__veil {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  margin: 0;
+}
+
+.contents.is-flow .contents__veil-circle {
+  top: 50%;
+}
+
+/*
+ * 中身を円より前に出す。スマホでは sticky をやめて static にしているため、
+ * このままだと z-index が効かず、円の下に隠れてしまう
+ */
+.contents.is-flow .contents__sticky {
+  position: relative;
+  z-index: 1;
+}
+
+/* 見出し：黒くなったら「CONTENTS」が 1 文字ずつ立ち上がる */
+.cc {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.contents.is-flow .cc__i {
+  display: inline-block;
+  transform: translateY(105%);
+  transition: transform 1s var(--e-out);
+  transition-delay: calc(var(--c, 0) * 0.07s);
+}
+
+.contents.is-flow.is-in .cc__i {
+  transform: none;
+}
+
+.contents.is-flow .contents__ja {
+  opacity: 0;
+  transition: opacity 0.8s var(--e-out) 0.55s;
+}
+
+.contents.is-flow.is-in .contents__ja {
+  opacity: 0.72;
+}
+
+/* カード列：黒くなるまで隠しておき、滑り込みに合わせて出す */
+.contents.is-flow .contents__rail {
+  overflow: hidden;
+  padding-inline: 0;
+  /* 縦のスクロールはそのまま、横の指の動きは JS で受け取る */
+  touch-action: pan-y;
+  opacity: 0;
+  transition: opacity 0.9s var(--e-out) 0.2s;
+}
+
+.contents.is-flow.is-in .contents__rail {
+  opacity: 1;
+}
+
+.contents.is-flow .ct-row {
+  transform: translate3d(var(--x, 0px), 0, 0);
+}
+
+/* 画面の中央を通っているカードは、PC のホバー時と同じく明るくする */
+.contents.is-flow .ct-card.is-current {
+  transform: scale(1.04);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6);
+  z-index: 2;
+}
+
+.contents.is-flow .ct-card.is-current .ct-card__thumb img {
+  filter: brightness(1) saturate(1);
+}
+
+.contents.is-flow .ct-card.is-current::after {
+  transform: scaleX(1);
+}
+
+.contents.is-flow .ct-card.is-current .ct-card__ext {
+  opacity: 1;
+}
+
 /* ============ Responsive ============ */
 @media (max-width: 1024px) {
   .links__grid { grid-template-columns: repeat(3, 1fr); }
