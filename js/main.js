@@ -654,6 +654,128 @@
     });
   }
 
+  /**
+   * NEWS の登場演出の下ごしらえ（見た目は home.css 側。スマホだけで効く）
+   * - 見出しの「NEWS」を 1 文字ずつ .nc / .nc__i に分ける
+   * - カードに順番（--i）を入れて、右から順に滑り込ませる
+   */
+  function initNewsIntro() {
+    var en = document.querySelector('.news__en');
+
+    if (en && en.dataset.split !== 'done') {
+      var text = en.textContent;
+      var frag = document.createDocumentFragment();
+
+      Array.prototype.forEach.call(text, function (ch, i) {
+        var mask = document.createElement('span');
+        var inner = document.createElement('span');
+
+        mask.className = 'nc';
+        inner.className = 'nc__i';
+        inner.textContent = ch;
+        inner.style.setProperty('--c', i);
+
+        mask.appendChild(inner);
+        frag.appendChild(mask);
+      });
+
+      en.setAttribute('aria-label', text);
+      en.textContent = '';
+      en.appendChild(frag);
+      en.dataset.split = 'done';
+    }
+
+    document.querySelectorAll('.news-card').forEach(function (card, i) {
+      card.style.setProperty('--i', i);
+    });
+  }
+
+  /**
+   * NEWS のスマホ表示（横スワイプのカルーセル）。見た目は home.css 側。
+   * - 中央に来たカードに .is-current を付ける（PC のホバー時と同じ見た目になる）
+   * - 下に「01 / 06」と進捗バーを足す
+   * - 中央以外のカードをタップしたときは、ページを移らずにそのカードを中央へ寄せる
+   * PC・タブレットでは .is-current のスタイルが効かないので、付いていても見た目は変わらない。
+   */
+  function initNewsCarousel() {
+    var grid = document.querySelector('.news__grid');
+    if (!grid) return;
+
+    var cards = Array.prototype.slice.call(grid.querySelectorAll('.news-card'));
+    if (cards.length < 2) return;
+
+    var mq = window.matchMedia('(max-width: 640px)');
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+
+    var pager = document.createElement('div');
+    pager.className = 'news__pager';
+    pager.setAttribute('aria-hidden', 'true');
+    pager.innerHTML = '<span class="news__count"><b>01</b> / ' + pad(cards.length) + '</span>' +
+      '<span class="news__bar"><i></i></span>';
+    grid.parentNode.insertBefore(pager, grid.nextSibling);
+
+    var countEl = pager.querySelector('b');
+    var barEl = pager.querySelector('i');
+    var current = -1;
+    var ticking = false;
+
+    var update = function () {
+      ticking = false;
+      if (!mq.matches) return;
+
+      // グリッドの中心にいちばん近いカードを「今のカード」にする
+      var box = grid.getBoundingClientRect();
+      var center = box.left + box.width / 2;
+      var best = 0;
+      var bestDist = Infinity;
+
+      cards.forEach(function (card, i) {
+        var r = card.getBoundingClientRect();
+        var d = Math.abs(r.left + r.width / 2 - center);
+        if (d < bestDist) { bestDist = d; best = i; }
+      });
+
+      if (best !== current) {
+        if (current >= 0) cards[current].classList.remove('is-current');
+        cards[best].classList.add('is-current');
+        countEl.textContent = pad(best + 1);
+        current = best;
+      }
+
+      // バーは 1 枚目で 1/6、最後で満タン。スクロールに合わせてなめらかに伸ばす
+      var max = grid.scrollWidth - grid.clientWidth;
+      var progress = max > 0 ? grid.scrollLeft / max : 0;
+      var n = cards.length;
+      barEl.style.setProperty('--p', (1 / n + (1 - 1 / n) * progress).toFixed(4));
+    };
+
+    var request = function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+
+    grid.addEventListener('scroll', request, { passive: true });
+    window.addEventListener('resize', request);
+    if (mq.addEventListener) mq.addEventListener('change', request);
+
+    cards.forEach(function (card, i) {
+      card.querySelector('a').addEventListener('click', function (e) {
+        if (!mq.matches || i === current) return;
+
+        e.preventDefault();
+        var r = card.getBoundingClientRect();
+        var box = grid.getBoundingClientRect();
+        grid.scrollBy({
+          left: r.left + r.width / 2 - (box.left + box.width / 2),
+          behavior: reduced ? 'auto' : 'smooth'
+        });
+      });
+    });
+
+    update();
+  }
+
   /*
    * SERVICE の背景に敷いた英字を、スクロールに合わせて横に流す。
    * ブロックが画面を通過する間の進み具合を 0〜1 にして --p に渡す。
@@ -727,6 +849,8 @@
     initReveal();
     initStalker();
     initGate();
+    initNewsIntro();
+    initNewsCarousel();
     initLogoDraw();
     initFvIntro();
     initServiceParallax();

@@ -722,6 +722,206 @@
   color: var(--c-orange);
 }
 
+/*
+ * スマホ：NEWS は横スワイプのカルーセルにする。
+ * 1 列に 6 枚並べると縦に長くなりすぎるのと、ホバーがなく動きが出ないため。
+ * - 横一列に並べ、スクロールスナップで 1 枚ずつ止める。左右のカードを少しのぞかせる
+ * - 中央のカード（.is-current、main.js が付ける）を PC のホバー時と同じ見た目にする
+ * - 下に「01 / 06」と進捗バー（.news__pager、main.js が足す）
+ */
+.news__pager {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .news__grid {
+    display: flex;
+    gap: 0;
+    /* セクションの左右の余白を打ち消して、画面の端から端まで使う */
+    margin-inline: calc(-1 * var(--pad-x));
+    /* 最初と最後のカードも中央で止まるよう、両端に余白を取る */
+    padding: 14px 12vw 30px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .news__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .news-card {
+    flex: 0 0 76vw;
+    padding-inline: 2vw;
+    scroll-snap-align: center;
+  }
+
+  /* 中央以外のカードは少し小さく、薄く */
+  .news-card a {
+    opacity: 0.5;
+    transform: scale(0.9);
+    transition: transform 0.6s var(--e-out), opacity 0.6s var(--e-out),
+      box-shadow 0.6s var(--e-out);
+  }
+
+  /* 中央のカードは、PC のホバー時と同じ状態にする */
+  .news-card.is-current a {
+    opacity: 1;
+    transform: translateY(-6px);
+    box-shadow: 0 14px 32px rgba(29, 29, 29, 0.12);
+  }
+
+  .news-card.is-current .news-card__thumb img {
+    transform: scale(1.06);
+    transition-duration: 1.6s;
+  }
+
+  .news-card.is-current .news-card__btn {
+    gap: 16px;
+  }
+
+  .news-card.is-current .news-card__btn::after {
+    transform: translateX(-50%) scaleX(1);
+  }
+
+  /* 番号と進捗バー */
+  .news__pager {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 4px;
+    font-family: var(--f-en);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--c-ink-weak);
+  }
+
+  .news__count b {
+    color: var(--c-ink);
+  }
+
+  .news__bar {
+    position: relative;
+    flex: 1;
+    height: 2px;
+    background: var(--c-line);
+    overflow: hidden;
+  }
+
+  .news__bar i {
+    position: absolute;
+    inset: 0;
+    background: var(--c-navy);
+    transform: scaleX(var(--p, 0));
+    transform-origin: left center;
+    transition: transform 0.25s linear;
+  }
+}
+
+/*
+ * スマホ：NEWS の登場演出（動きを減らす設定の端末では使わず、通常の .reveal のまま）
+ * 1. 「NEWS」が 1 文字ずつマスクの中から立ち上がる（3 導線の英字と同じ演出）
+ * 2. 「お知らせ」が出て、下に短い線が伸びる
+ * 3. カードがその場で順にふわっと現れ、写真が中央の細い線から上下に開く
+ * カード列は横スクロールの枠の中にあるので、横方向には動かさない
+ * （枠の中で横に動かすと、端末によってはスナップが合わせ直されてガタついて見える）
+ * 文字の分割とカードの順番（--i）は main.js（initNewsIntro）が入れる。
+ */
+@media (max-width: 640px) and (prefers-reduced-motion: no-preference) {
+  /* 見出しとカード列そのものは動かさず、中身を動かす */
+  .news__head.reveal,
+  .news__grid.reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* 1. 見出しの英字 */
+  .nc {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: top;
+    padding-bottom: 0.08em;
+    margin-bottom: -0.08em;
+  }
+
+  .nc__i {
+    display: inline-block;
+    transform: translateY(105%);
+    transition: transform 1s var(--e-out);
+    transition-delay: calc(var(--c, 0) * 0.08s);
+  }
+
+  .news__head.is-in .nc__i {
+    transform: none;
+  }
+
+  /* 2. 和文と下線 */
+  .news__ja {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 12px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.8s var(--e-out) 0.4s, transform 0.8s var(--e-out) 0.4s;
+  }
+
+  .news__ja::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 32px;
+    height: 2px;
+    margin-left: -16px;
+    background: var(--c-orange);
+    transform: scaleX(0);
+    transition: transform 0.7s var(--e-out) 0.75s;
+  }
+
+  .news__head.is-in .news__ja {
+    opacity: 1;
+    transform: none;
+  }
+
+  .news__head.is-in .news__ja::after {
+    transform: scaleX(1);
+  }
+
+  /* 3. カードはその場でふわっと現れる */
+  .news-card {
+    opacity: 0;
+    transition: opacity 0.9s var(--e-out);
+    transition-delay: calc(0.45s + var(--i, 0) * 0.12s);
+  }
+
+  .news__grid.is-in .news-card {
+    opacity: 1;
+  }
+
+  /* 写真は中央の細い線から上下に開く */
+  .news-card__thumb {
+    clip-path: inset(50% 0 50% 0);
+    transition: clip-path 1.1s var(--e-inout);
+    transition-delay: calc(0.6s + var(--i, 0) * 0.12s);
+  }
+
+  .news__grid.is-in .news-card__thumb {
+    clip-path: inset(0 0 0 0);
+  }
+
+  /* 番号と進捗バーは、カードが出そろうころに出す */
+  .news__pager {
+    opacity: 0;
+    transition: opacity 0.8s var(--e-out) 1.3s;
+  }
+
+  .news__grid.is-in + .news__pager {
+    opacity: 1;
+  }
+}
+
 /* ============ 5. CONTENTS（黒背景・横流し） ============ */
 
 /*
@@ -1029,7 +1229,6 @@
 @media (max-width: 640px) {
   .links__grid { grid-template-columns: repeat(2, 1fr); }
 
-  .news__grid { grid-template-columns: 1fr; }
 
   .link-card {
     min-height: 140px;
