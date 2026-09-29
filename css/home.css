@@ -824,7 +824,7 @@
  * スマホ：NEWS の登場演出（動きを減らす設定の端末では使わず、通常の .reveal のまま）
  * 1. 「NEWS」が 1 文字ずつマスクの中から立ち上がる（3 導線の英字と同じ演出）
  * 2. 「お知らせ」が出て、下に短い線が伸びる
- * 3. カードがその場で順にふわっと現れ、写真が中央の細い線から上下に開く
+ * 3. 白いカードが下から上へせり上がり、そのあと写真が中央の細い線から上下に開く
  * カード列は横スクロールの枠の中にあるので、横方向には動かさない
  * （枠の中で横に動かすと、端末によってはスナップが合わせ直されてガタついて見える）
  * 文字の分割とカードの順番（--i）は main.js（initNewsIntro）が入れる。
@@ -889,22 +889,26 @@
     transform: scaleX(1);
   }
 
-  /* 3. カードはその場でふわっと現れる */
+  /*
+   * 3. 白いカードが下からせり上がる。
+   * 切り抜きの上辺を下端（100%）から上へ動かす。
+   * 最後はカードより一回り大きく切り抜き、影が切れないようにする
+   */
   .news-card {
-    opacity: 0;
-    transition: opacity 0.9s var(--e-out);
-    transition-delay: calc(0.45s + var(--i, 0) * 0.12s);
+    clip-path: inset(100% -48px 0 -48px);
+    transition: clip-path 0.85s var(--e-inout);
+    transition-delay: calc(0.4s + var(--i, 0) * 0.12s);
   }
 
   .news__grid.is-in .news-card {
-    opacity: 1;
+    clip-path: inset(-48px -48px -48px -48px);
   }
 
   /* 写真は中央の細い線から上下に開く */
   .news-card__thumb {
     clip-path: inset(50% 0 50% 0);
     transition: clip-path 1.1s var(--e-inout);
-    transition-delay: calc(0.6s + var(--i, 0) * 0.12s);
+    transition-delay: calc(1s + var(--i, 0) * 0.12s);
   }
 
   .news__grid.is-in .news-card__thumb {
@@ -914,7 +918,7 @@
   /* 番号と進捗バーは、カードが出そろうころに出す */
   .news__pager {
     opacity: 0;
-    transition: opacity 0.8s var(--e-out) 1.3s;
+    transition: opacity 0.8s var(--e-out) 1.7s;
   }
 
   .news__grid.is-in + .news__pager {
@@ -1272,7 +1276,10 @@
   transform: translate3d(var(--x, 0px), 0, 0);
 }
 
-/* 画面の中央を通っているカードは、PC のホバー時と同じく明るくする */
+/*
+ * 画面の中央を通っているカードは、PC のホバー時と同じく明るくする。
+ * オレンジの線はスマホでは出さない
+ */
 .contents.is-flow .ct-card.is-current {
   transform: scale(1.04);
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6);
@@ -1283,8 +1290,9 @@
   filter: brightness(1) saturate(1);
 }
 
-.contents.is-flow .ct-card.is-current::after {
-  transform: scaleX(1);
+/* タップ直後の :hover でも出ないよう、線そのものを消しておく */
+.contents.is-flow .ct-card::after {
+  display: none;
 }
 
 .contents.is-flow .ct-card.is-current .ct-card__ext {
