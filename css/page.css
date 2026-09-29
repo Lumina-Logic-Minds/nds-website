@@ -950,6 +950,22 @@ a.srv:hover .srv__media img {
   .rmsg__text {
     line-height: 1.75;
   }
+}
+
+/*
+ * スマホでは、見出しのいちばん長い行（「革新的なソリューションを提供し」15 字など）が
+ * 1 行に収まるよう、画面幅に合わせて文字を小さくする。
+ * 24px 固定だと 390px 幅の端末で最後の 1〜2 文字だけが折り返してしまう
+ */
+@media (max-width: 640px) {
+  .rmsg__text {
+    font-size: clamp(1.125rem, 5.6vw, 1.5rem);
+  }
+
+  /* 同じく「仕事のスケールは大きい方がいい。」（16 字）が 1 行に収まる大きさにする */
+  .rlead__title {
+    font-size: clamp(1rem, 5.2vw, 1.5rem);
+  }
 
   .req__layout {
     gap: clamp(24px, 5vw, 40px);
