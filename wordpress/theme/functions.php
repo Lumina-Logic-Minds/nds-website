@@ -188,9 +188,6 @@ add_filter( 'pre_get_document_title', function () {
 		return esc_html( $meta['title'] );
 	}
 
-	if ( is_category() ) {
-		return esc_html( single_cat_title( '', false ) . '｜お知らせ｜' . NDS_SITE_NAME );
-	}
 	if ( is_singular() ) {
 		return esc_html( single_post_title( '', false ) . '｜' . NDS_SITE_NAME );
 	}
@@ -209,9 +206,6 @@ function nds_meta_description() {
 		return $meta['description'];
 	}
 
-	if ( is_category() ) {
-		return single_cat_title( '', false ) . 'に関する、' . NDS_SITE_NAME . 'からのお知らせ一覧です。';
-	}
 	if ( is_singular( 'post' ) ) {
 		$text = wp_strip_all_tags( get_the_excerpt( get_queried_object_id() ) );
 		return mb_substr( preg_replace( '/\s+/u', ' ', $text ), 0, 120 );
@@ -242,23 +236,67 @@ function nds_current_page_meta() {
    NEWS
    ============================================ */
 
-// 一覧とカテゴリ一覧は 1 ページ 10 件
+// NEWS 一覧は 1 ページ 10 件
 add_action( 'pre_get_posts', function ( $query ) {
 	if ( is_admin() || ! $query->is_main_query() ) {
 		return;
 	}
-	if ( $query->is_home() || $query->is_category() ) {
+	if ( $query->is_home() ) {
 		$query->set( 'posts_per_page', 10 );
 	}
 } );
 
-// 日付・著者・タグのアーカイブは使わないので、NEWS 一覧へ送る
+/*
+ * NEWS はカテゴリー・タグで分けない（2026-09-29 決定）。
+ * 管理画面の投稿からカテゴリー欄・タグ欄を外す。
+ */
+add_action( 'init', function () {
+	unregister_taxonomy_for_object_type( 'category', 'post' );
+	unregister_taxonomy_for_object_type( 'post_tag', 'post' );
+} );
+
+// 日付・著者・カテゴリー・タグのアーカイブは使わないので、NEWS 一覧へ送る
 add_action( 'template_redirect', function () {
-	if ( is_date() || is_author() || is_tag() ) {
+	if ( is_date() || is_author() || is_category() || is_tag() ) {
 		wp_safe_redirect( get_permalink( get_option( 'page_for_posts' ) ) ?: home_url( '/' ), 301 );
 		exit;
 	}
 } );
+
+
+/* ============================================
+   旧サイトの URL を新しいページへ転送する（301）
+   公開時に旧サイトのファイルを消したあと、ブックマークや検索結果から来た人を迷わせない。
+   旧ファイルがサーバーに残っていると、そちらが表示されて転送されないので注意。
+   ============================================ */
+
+add_action( 'template_redirect', function () {
+	if ( ! is_404() ) {
+		return;
+	}
+
+	$old = array(
+		'index.html'       => '',
+		'maintenance.html' => '',
+		'company.html'     => 'company',
+		'service.html'     => 'service',
+		'recluit.html'     => 'recruit', // 旧サイトは綴りが recluit だった
+		'recruit.html'     => 'recruit',
+		'job_list.html'    => 'recruit',
+		'contact.html'     => 'contact',
+		'contact1.php'     => 'contact',
+		'check.php'        => 'contact',
+		'check_done.php'   => 'contact',
+		'privacy.html'     => 'privacy',
+	);
+
+	$path = trim( (string) wp_parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ), '/' );
+
+	if ( isset( $old[ $path ] ) ) {
+		wp_safe_redirect( nds_page_url( $old[ $path ] ), 301 );
+		exit;
+	}
+}, 1 ); // WordPress の「似た URL を推測して転送」より先に処理する
 
 
 /* ============================================

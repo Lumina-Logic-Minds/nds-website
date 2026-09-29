@@ -15,6 +15,9 @@
 
 # Windows のブラウザからは 127.0.0.1 では届かず localhost なら届く（WSL の転送の都合）ので、
 # WordPress のサイト URL も localhost にしておく。
+#
+# Playground のバージョンは固定している（最新版が壊れて公開されることがあるため）。
+# 上げるときは、下の @3.1.55 を書き換えて動くか確かめる。
 
 set -euo pipefail
 
@@ -31,7 +34,7 @@ echo "  管理画面  : http://localhost:${PORT}/wp-admin/  （自動でログ�
 echo "  止めるとき: Ctrl + C"
 echo
 
-exec npx -y @wp-playground/cli@latest server \
+exec npx -y @wp-playground/cli@3.1.55 server \
   --port="${PORT}" \
   --site-url="http://localhost:${PORT}" \
   --mount=./dist/nds:/wordpress/wp-content/themes/nds \

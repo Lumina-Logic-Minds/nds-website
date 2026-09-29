@@ -220,9 +220,11 @@
 }
 
 /*
- * ホバー：カーソルが触れた地点から円が広がって行を満たす。
- * 位置は JS が --mx / --my に入れる。
- * 離すと同じ地点へ収束するので、毎回違う動きになる。
+ * 行が「ON」（.is-on）になったときの色面。
+ * PC：カーソルが触れた地点から円が広がって行を満たす。
+ *     位置は JS が --mx / --my に入れる。離すと同じ地点へ収束するので、毎回違う動きになる。
+ * スマホ：スクロールで画面中央に来た行を ON にし、色面を横から引く（下の @media (hover: none)）。
+ * .is-on の付け外しはどちらも main.js（initGate）が行う。
  */
 .gate::before {
   content: "";
@@ -246,7 +248,7 @@
   will-change: transform;
 }
 
-.gate:hover::before {
+.gate.is-on::before {
   transform: scale(1);
 }
 
@@ -271,7 +273,7 @@
   transition: transform 0.7s var(--e-out);
 }
 
-.gate:hover .gate__body {
+.gate.is-on .gate__body {
   transform: translateX(14px);
 }
 
@@ -371,11 +373,11 @@
   transform: translateY(100%);
 }
 
-.gate:hover .gate__en-in {
+.gate.is-on .gate__en-in {
   transform: translateY(-100%);
 }
 
-.gate:hover .gate__en-out {
+.gate.is-on .gate__en-out {
   transform: translateY(0);
 }
 
@@ -390,11 +392,11 @@
   transition: color 0.45s var(--e-out);
 }
 
-.gate:hover .gate__ja {
+.gate.is-on .gate__ja {
   color: #fff;
 }
 
-.gate:hover .gate__text {
+.gate.is-on .gate__text {
   color: rgba(255, 255, 255, 0.88);
 }
 
@@ -458,7 +460,7 @@
     color 0.5s var(--e-out);
 }
 
-.gate:hover .gate__arrow {
+.gate.is-on .gate__arrow {
   background: #fff;
   border-color: #fff;
   color: var(--gate-c, var(--c-navy));
@@ -475,13 +477,69 @@
   animation: arrow-float 1.5s var(--e-inout) infinite;
 }
 
-.gate:hover .gate__arrow svg {
+.gate.is-on .gate__arrow svg {
   animation-duration: 0.85s;
 }
 
 @keyframes arrow-float {
   0%, 100% { transform: translateX(-2px); }
   50%      { transform: translateX(3px); }
+}
+
+/*
+ * スマホ・タブレット（ホバーできない端末）
+ * - 色面は円ではなく、行いっぱいの帯を横から引く。偶数行は右から
+ * - タップすると、指が触れた地点から波紋が広がってからページを移る
+ */
+@media (hover: none) {
+  .gate::before {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    margin: 0;
+    border-radius: 0;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.9s var(--e-inout);
+  }
+
+  .gate:nth-child(even)::before {
+    transform-origin: right center;
+  }
+
+  .gate.is-on::before {
+    transform: scaleX(1);
+  }
+}
+
+/* タップの波紋。JS が触れた地点に置き、広がりながら消える */
+.gate__ripple {
+  position: absolute;
+  z-index: 0;
+  width: 240%;
+  aspect-ratio: 1;
+  margin: -120% 0 0 -120%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  transform: scale(0);
+  animation: gate-ripple 0.7s var(--e-out) forwards;
+}
+
+/* まだ色づいていない行をタップしたときは、行の色で広げる */
+.gate__ripple.is-fill {
+  background: var(--gate-c, var(--c-navy));
+  animation-name: gate-ripple-fill;
+}
+
+@keyframes gate-ripple {
+  to { transform: scale(1); opacity: 0; }
+}
+
+@keyframes gate-ripple-fill {
+  to { transform: scale(1); }
 }
 
 /* ============ 4. NEWS ============ */
@@ -589,18 +647,6 @@
 
   line-break: strict;
   word-break: auto-phrase;
-}
-
-/* カテゴリ（WordPress で出力）。タイトルの上に小さく置く */
-.news-card__cat {
-  align-self: flex-start;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--c-bg-sub);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--c-navy);
 }
 
 .news-card__date {
@@ -956,7 +1002,8 @@
 }
 
 @media (max-width: 900px) {
-  .gate {
+  /* 横並びは .gate__wrap が持っているので、折り返しもそちらに指定する */
+  .gate__wrap {
     flex-wrap: wrap;
     gap: 14px 20px;
   }

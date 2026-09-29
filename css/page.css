@@ -1158,51 +1158,6 @@ a.srv:hover .srv__media img {
   color: var(--c-ink-weak);
 }
 
-/* ---- カテゴリ（WordPress で出力） ---- */
-.nlist__cat {
-  display: inline-block;
-  margin-bottom: 6px;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--c-bg-sub);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--c-navy);
-}
-
-/* 一覧の上のカテゴリ切り替え */
-.ncat {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: clamp(24px, 3.5vw, 36px);
-}
-
-.ncat__item {
-  display: inline-flex;
-  align-items: center;
-  height: 36px;
-  padding-inline: 18px;
-  border: 1px solid var(--c-line);
-  border-radius: 999px;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: var(--c-ink);
-  transition: background 0.35s var(--e-out), color 0.35s var(--e-out),
-    border-color 0.35s var(--e-out);
-}
-
-.ncat__item:hover {
-  border-color: var(--c-navy);
-}
-
-.ncat__item.is-current {
-  background: var(--c-navy);
-  border-color: var(--c-navy);
-  color: #fff;
-}
-
 .nlist__empty {
   padding-block: 40px;
   text-align: center;
@@ -1252,30 +1207,6 @@ a.srv:hover .srv__media img {
   letter-spacing: 0.06em;
   color: var(--c-orange);
   margin-bottom: 14px;
-}
-
-/* WordPress 版では日付とカテゴリを 1 行に並べる */
-.post__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.post__meta .post__date {
-  margin-bottom: 0;
-}
-
-.post__cat {
-  padding: 2px 12px;
-  border: 1px solid var(--c-line);
-  border-radius: 999px;
-  background: var(--c-bg);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--c-navy);
 }
 
 .post__title {

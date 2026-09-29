@@ -52,14 +52,6 @@ function nds_post_thumb( $post = null, $lazy = true ) {
 }
 
 /**
- * 記事のカテゴリ名（最初の 1 つ）
- */
-function nds_post_cat( $post = null ) {
-	$cats = get_the_category( get_post( $post )->ID );
-	return $cats ? $cats[0]->name : '';
-}
-
-/**
  * 日付。<time> の中身は 2026.08.05 の形
  */
 function nds_post_date( $class, $post = null ) {
@@ -69,42 +61,6 @@ function nds_post_date( $class, $post = null ) {
 		esc_attr( get_the_date( 'Y-m-d', $post ) ),
 		esc_html( get_the_date( 'Y.m.d', $post ) )
 	);
-}
-
-/**
- * NEWS 一覧の上に並べるカテゴリの切り替え
- * 記事が 1 件以上あるカテゴリだけを出す。カテゴリが 1 つしかなければ出さない
- */
-function nds_news_filter() {
-	$cats = get_categories( array( 'hide_empty' => true ) );
-	if ( count( $cats ) < 2 ) {
-		return;
-	}
-
-	$current = is_category() ? get_queried_object_id() : 0;
-	$all_url = get_permalink( get_option( 'page_for_posts' ) ) ?: home_url( '/' );
-
-	echo '<nav class="ncat reveal" aria-label="カテゴリ">';
-
-	printf(
-		'<a class="ncat__item%s" href="%s"%s>すべて</a>',
-		$current ? '' : ' is-current',
-		esc_url( $all_url ),
-		$current ? '' : ' aria-current="page"'
-	);
-
-	foreach ( $cats as $cat ) {
-		$is = ( $cat->term_id === $current );
-		printf(
-			'<a class="ncat__item%s" href="%s"%s>%s</a>',
-			$is ? ' is-current' : '',
-			esc_url( get_category_link( $cat ) ),
-			$is ? ' aria-current="page"' : '',
-			esc_html( $cat->name )
-		);
-	}
-
-	echo '</nav>';
 }
 
 /**

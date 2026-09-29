@@ -5,7 +5,6 @@
  * - 固定ページ（ホーム / COMPANY / SERVICE / RECRUIT / CONTACT / PRIVACY / NEWS）を作る
  * - 表示設定：ホームを固定ページに、NEWS を投稿ページにする
  * - パーマリンク：記事は /news/123/ の形
- * - 「未分類」カテゴリを「お知らせ」に変える
  * - WordPress の初期記事・初期ページを削除し、サンプル記事 6 件を登録する
  *
  * 一度実行すると nds_setup_done オプションが立ち、再有効化しても実行しない。
@@ -74,13 +73,6 @@ function nds_initial_setup() {
 
 	// ---- パーマリンク ----
 	update_option( 'permalink_structure', '/news/%post_id%/' );
-
-	// ---- カテゴリ ----
-	$default_cat = (int) get_option( 'default_category' );
-	$term        = get_term( $default_cat, 'category' );
-	if ( $term && ! is_wp_error( $term ) && 'uncategorized' === $term->slug ) {
-		wp_update_term( $default_cat, 'category', array( 'name' => 'お知らせ', 'slug' => 'info' ) );
-	}
 
 	// ---- WordPress の初期コンテンツを削除 ----
 	foreach ( array( 'hello-world' => 'post', 'sample-page' => 'page' ) as $slug => $type ) {
@@ -169,7 +161,6 @@ function nds_insert_sample_posts() {
 				'post_excerpt'  => $excerpt,
 				'post_content'  => $body,
 				'post_date'     => $date . ' 10:00:00',
-				'post_category' => array( (int) get_option( 'default_category' ) ),
 			)
 		);
 

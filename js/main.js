@@ -566,22 +566,91 @@
 
   /* ---------- init ---------- */
   /**
-   * 3導線のホバー。
-   * カーソルが触れた地点を CSS 変数に渡し、
-   * そこを中心に色が広がるようにする。
+   * 3導線の ON / OFF（.is-on）。見た目は home.css 側。
+   *
+   * PC（ホバーできる端末）：
+   *   マウスが乗っている行を ON にする。触れた地点を --mx / --my に渡し、
+   *   そこを中心に色が広がる。離れた地点へ収束するので、毎回違う動きになる。
+   *
+   * スマホ・タブレット：
+   *   ホバーがないので、画面の中央を通過している行を ON にする。
+   *   スクロールするだけで COMPANY → SERVICE → RECRUIT と順に色づく。
+   *   タップすると触れた地点から波紋を広げ、広がるのを見せてからページを移る。
    */
-  function initGateOrigin() {
-    document.querySelectorAll('.gate').forEach(function (gate) {
-      var set = function (e) {
+  function initGate() {
+    var gates = document.querySelectorAll('.gate');
+    if (!gates.length) return;
+
+    if (window.matchMedia('(hover: hover)').matches) {
+      gates.forEach(function (gate) {
+        var set = function (e, on) {
+          var r = gate.getBoundingClientRect();
+
+          gate.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+          gate.style.setProperty('--my', (e.clientY - r.top) + 'px');
+          gate.classList.toggle('is-on', on);
+        };
+
+        gate.addEventListener('mouseenter', function (e) { set(e, true); });
+        gate.addEventListener('mouseleave', function (e) { set(e, false); });
+      });
+      return;
+    }
+
+    if (reduced) return;
+
+    // ---- スクロール：画面の上下 45% を除いた、中央の細い帯に掛かっている行を ON ----
+    var io = null;
+
+    if ('IntersectionObserver' in window) {
+      io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          entry.target.classList.toggle('is-on', entry.isIntersecting);
+        });
+      }, { rootMargin: '-45% 0px -45% 0px' });
+
+      gates.forEach(function (gate) { io.observe(gate); });
+    }
+
+    // ---- タップ：触れた地点から波紋を広げてから移動する ----
+    var WAIT = 420;
+
+    gates.forEach(function (gate) {
+      var point = null;
+
+      gate.addEventListener('pointerdown', function (e) {
         var r = gate.getBoundingClientRect();
+        point = { x: e.clientX - r.left, y: e.clientY - r.top };
+      });
 
-        gate.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-        gate.style.setProperty('--my', (e.clientY - r.top) + 'px');
-      };
+      gate.addEventListener('click', function (e) {
+        if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return;
+        e.preventDefault();
 
-      // 入った位置から広がり、離れた位置へ収束する
-      gate.addEventListener('mouseenter', set);
-      gate.addEventListener('mouseleave', set);
+        var r = gate.getBoundingClientRect();
+        var p = point || { x: r.width / 2, y: r.height / 2 };
+        var ripple = document.createElement('span');
+
+        // 色づいている行には白い波紋、まだの行には行の色で広げる
+        ripple.className = 'gate__ripple' + (gate.classList.contains('is-on') ? '' : ' is-fill');
+        ripple.style.left = p.x + 'px';
+        ripple.style.top = p.y + 'px';
+        gate.appendChild(ripple);
+        gate.classList.add('is-on');
+
+        setTimeout(function () { location.href = gate.href; }, WAIT);
+      });
+    });
+
+    // 戻るボタンでページが復元されたときに、波紋と ON 状態を戻す
+    window.addEventListener('pageshow', function (e) {
+      if (!e.persisted) return;
+
+      document.querySelectorAll('.gate__ripple').forEach(function (el) { el.remove(); });
+      gates.forEach(function (gate) {
+        gate.classList.remove('is-on');
+        if (io) { io.unobserve(gate); io.observe(gate); }
+      });
     });
   }
 
@@ -657,7 +726,7 @@
     initDrawer();
     initReveal();
     initStalker();
-    initGateOrigin();
+    initGate();
     initLogoDraw();
     initFvIntro();
     initServiceParallax();

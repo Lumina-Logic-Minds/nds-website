@@ -25,12 +25,7 @@ while ( have_posts() ) :
       <div class="inner post__inner">
 
         <header class="post__head">
-          <p class="post__meta reveal">
-            <?php nds_post_date( 'post__date' ); ?>
-            <?php if ( $cat = nds_post_cat() ) : ?>
-            <span class="post__cat"><?php echo esc_html( $cat ); ?></span>
-            <?php endif; ?>
-          </p>
+          <?php nds_post_date( 'post__date reveal' ); ?>
 
           <h1 class="post__title reveal"><?php the_title(); ?></h1>
         </header>

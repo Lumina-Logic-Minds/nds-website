@@ -22,9 +22,6 @@ while ( $nds_news->have_posts() ) :
                 <?php nds_post_thumb(); ?>
               </span>
               <span class="news-card__body">
-                <?php if ( $cat = nds_post_cat() ) : ?>
-                <span class="news-card__cat"><?php echo esc_html( $cat ); ?></span>
-                <?php endif; ?>
                 <span class="news-card__title"><?php the_title(); ?></span>
                 <?php nds_post_date( 'news-card__date' ); ?>
                 <span class="news-card__btn">

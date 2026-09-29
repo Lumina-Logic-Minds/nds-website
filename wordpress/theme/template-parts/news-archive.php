@@ -1,6 +1,6 @@
 <?php
 /**
- * NEWS 一覧（投稿ページとカテゴリ一覧で共通）
+ * NEWS 一覧
  * 元：news.html
  */
 ?>
@@ -11,16 +11,14 @@
     <section class="phead" style="--page-c: #010038;">
       <div class="inner">
         <h1 class="phead__en split-mask">NEWS</h1>
-        <p class="phead__ja"><?php echo is_category() ? esc_html( single_cat_title( '', false ) ) : 'お知らせ一覧'; ?></p>
+        <p class="phead__ja">お知らせ一覧</p>
       </div>
     </section>
 
     <!-- ============ 一覧 ============ -->
-    <!-- 1 件 = 1 行。左にサムネイル、中央にカテゴリ・タイトル・抜粋、右に日付 -->
+    <!-- 1 件 = 1 行。左にサムネイル、中央にタイトルと抜粋、右に日付 -->
     <section class="section nlist-sec">
       <div class="inner">
-        <?php nds_news_filter(); ?>
-
         <?php if ( have_posts() ) : ?>
         <ul class="nlist">
           <?php while ( have_posts() ) : the_post(); ?>
@@ -30,9 +28,6 @@
                 <?php nds_post_thumb(); ?>
               </span>
               <span class="nlist__body">
-                <?php if ( $cat = nds_post_cat() ) : ?>
-                <span class="nlist__cat"><?php echo esc_html( $cat ); ?></span>
-                <?php endif; ?>
                 <span class="nlist__title"><?php the_title(); ?></span>
                 <span class="nlist__excerpt"><?php echo esc_html( wp_strip_all_tags( get_the_excerpt() ) ); ?></span>
               </span>
