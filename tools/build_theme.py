@@ -14,7 +14,7 @@
     3. 静的 HTML から次のテンプレートを生成
          header.php / footer.php  … index.html のヘッダー・ドロワー・オープニング・フッター
          front-page.php           … index.html（NEWS の 6 件は WordPress の記事に差し替え）
-         page-{スラッグ}.php      … company / service / recruit / contact / privacy
+         page-{スラッグ}.php      … company / service / recruit / contact / privacy / bpo（SERVICE の子ページ）
          inc/page-meta.php        … 各ページの <title> と meta description
        リンク（company.html など）と画像などのパスは、WordPress 用の URL に置き換える
 
@@ -34,7 +34,8 @@ OUT = DIST / 'nds'
 
 ASSET_DIRS = ['css', 'js', 'image', 'pdf']
 
-# 静的 HTML のファイル名 → WordPress の固定ページのスラッグ（'' はトップ）
+# 静的 HTML のファイル名 → WordPress の固定ページのパス（'' はトップ）
+# 'service/bpo' は SERVICE の子ページ（URL は /service/bpo/、スラッグは bpo）
 PAGES = {
     'index.html': '',
     'company.html': 'company',
@@ -43,10 +44,16 @@ PAGES = {
     'news.html': 'news',
     'contact.html': 'contact',
     'privacy.html': 'privacy',
+    'bpo.html': 'service/bpo',
 }
 
-# page-{スラッグ}.php を生成するページ
-PAGE_TEMPLATES = ['company', 'service', 'recruit', 'contact', 'privacy']
+# page-{スラッグ}.php を生成するページ（値は PAGES のパス）
+PAGE_TEMPLATES = ['company', 'service', 'recruit', 'contact', 'privacy', 'service/bpo']
+
+
+def page_slug(path):
+    """固定ページのパスから、スラッグ（最後の部分）を取り出す"""
+    return path.rsplit('/', 1)[-1]
 
 GENERATED_NOTE = (
     '<?php\n'
@@ -207,8 +214,10 @@ def main():
     (OUT / 'front-page.php').write_text(rewrite_urls(front_php, 'front-page.php'), encoding='utf-8')
 
     # 3-4. page-{スラッグ}.php
-    for slug in PAGE_TEMPLATES:
-        name = f'{slug}.html'
+    files = {path: name for name, path in PAGES.items()}
+    for path in PAGE_TEMPLATES:
+        name = files[path]
+        slug = page_slug(path)
         main = main_block(read(name), name)
 
         if slug == 'contact':
@@ -230,7 +239,7 @@ def main():
     rows = []
     for name, slug in PAGES.items():
         title, desc = extract_meta(read(name), name)
-        key = slug or 'front'
+        key = page_slug(slug) or 'front'
         rows.append(
             f'\t\t{php_str(key)} => array(\n'
             f'\t\t\t\'title\'       => {php_str(title)},\n'

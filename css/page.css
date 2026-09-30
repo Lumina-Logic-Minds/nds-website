@@ -644,6 +644,68 @@ a.srv:hover .srv__media img {
   opacity: 0.65;
 }
 
+/*
+ * BPO事業は写真がないので、紹介ページ（bpo.html）と同じ紺×オレンジで表紙のように組む。
+ * 中身は <img> と同じく、マスクと逆向きに動かす。
+ */
+.srv__media--bpo {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  aspect-ratio: 750 / 422;
+  background:
+    radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(120deg, var(--c-navy) 0%, #0d0b5c 100%);
+  color: #fff;
+  text-align: center;
+}
+
+.srv__media--bpo > span {
+  transform: scale(1.1);
+  transition: transform 1.7s var(--e-out);
+}
+
+.srv.is-in .srv__media--bpo > span {
+  transform: none;
+}
+
+a.srv:hover .srv__media--bpo > span {
+  transform: scale(1.04);
+}
+
+.srv__bpo-en {
+  font-family: var(--f-en);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: var(--c-orange);
+}
+
+.srv__bpo-mark {
+  font-family: var(--f-en);
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.srv__bpo-mark::after {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 4px;
+  margin: 16px auto 0;
+  background: var(--c-orange);
+}
+
+.srv__bpo-tags {
+  font-size: clamp(0.6875rem, 1.1vw, 0.8125rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
 /* ---- テキスト ---- */
 .srv__body {
   opacity: 0;

@@ -2,7 +2,8 @@
 /**
  * テーマを有効化したときの初期設定（1 回だけ実行）
  *
- * - 固定ページ（ホーム / COMPANY / SERVICE / RECRUIT / CONTACT / PRIVACY / NEWS）を作る
+ * - 固定ページ（ホーム / COMPANY / SERVICE / RECRUIT / CONTACT / PRIVACY / NEWS）と、
+ *   SERVICE の子ページ（BPO事業）を作る
  * - 表示設定：ホームを固定ページに、NEWS を投稿ページにする
  * - パーマリンク：記事は /news/123/ の形
  * - WordPress の初期記事・初期ページを削除し、サンプル記事 6 件を登録する
@@ -36,6 +37,46 @@ add_action( 'admin_init', function () {
 	}
 } );
 
+/*
+ * 初期設定のあとで追加した固定ページ。
+ * 初期設定は 1 回しか走らないので、テーマを置き換えたあと管理画面を開いたときに、足りないページだけ作る。
+ */
+add_action( 'admin_init', function () {
+	if ( get_option( 'nds_setup_done' ) && current_user_can( 'manage_options' ) ) {
+		nds_ensure_child_pages();
+	}
+} );
+
+function nds_ensure_child_pages() {
+	// 親のスラッグ => array( 子のスラッグ => タイトル )
+	$children = array(
+		'service' => array(
+			'bpo' => 'BPO事業',
+		),
+	);
+
+	foreach ( $children as $parent_slug => $pages ) {
+		$parent = get_page_by_path( $parent_slug );
+		if ( ! $parent ) {
+			continue;
+		}
+		foreach ( $pages as $slug => $title ) {
+			if ( get_page_by_path( $parent_slug . '/' . $slug ) ) {
+				continue;
+			}
+			wp_insert_post(
+				array(
+					'post_type'   => 'page',
+					'post_status' => 'publish',
+					'post_name'   => $slug,
+					'post_title'  => $title,
+					'post_parent' => $parent->ID,
+				)
+			);
+		}
+	}
+}
+
 function nds_initial_setup() {
 	if ( get_option( 'nds_setup_done' ) ) {
 		return;
@@ -66,6 +107,8 @@ function nds_initial_setup() {
 			)
 		);
 	}
+
+	nds_ensure_child_pages();
 
 	update_option( 'show_on_front', 'page' );
 	update_option( 'page_on_front', $ids['home'] );

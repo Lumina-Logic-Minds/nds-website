@@ -87,6 +87,11 @@ add_action( 'wp_enqueue_scripts', function () {
 		? array( 'base', 'layout', 'home', 'splash' )
 		: array( 'base', 'layout', 'page' );
 
+	// BPO事業のページ（/service/bpo/）だけ、専用の CSS を足す
+	if ( is_page( 'bpo' ) ) {
+		$styles[] = 'bpo';
+	}
+
 	$prev = 'nds-fonts';
 	foreach ( $styles as $name ) {
 		$path = 'css/' . $name . '.css';
