@@ -598,48 +598,83 @@ body {
   font-weight: 800;
 }
 
+/*
+ * 強みは箱に入れず、横長の行で組む。
+ * 左に大きな白抜きの数字（表示されるとオレンジで塗られる）、中央に見出し、右に本文。
+ */
 .bpo-strength__list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(16px, 2.4vw, 32px);
-  margin-top: clamp(48px, 6vw, 80px);
+  margin-top: clamp(56px, 7vw, 96px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .bpo-point {
   position: relative;
-  padding: clamp(26px, 3vw, 38px) clamp(22px, 2.6vw, 32px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.03);
-  transition: background-color 0.4s, border-color 0.4s;
+  display: grid;
+  grid-template-columns: clamp(96px, 13vw, 180px) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(16px, 3vw, 48px);
+  padding-block: clamp(28px, 3.6vw, 44px);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
 }
 
-.bpo-point:hover {
-  border-color: var(--c-orange);
-  background: rgba(255, 255, 255, 0.06);
+/* 行の上端を、左からオレンジの線が走る */
+.bpo-point::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -1px;
+  width: 100%;
+  height: 1px;
+  background: var(--c-orange);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1.2s var(--e-out) calc(var(--d, 0s) + 0.3s);
+}
+
+.bpo-point.is-in::before {
+  transform: scaleX(1);
 }
 
 .bpo-point__num {
   font-family: var(--f-en);
-  font-size: 2.5rem;
+  font-size: clamp(4rem, 9vw, 7.5rem);
   font-weight: 800;
-  line-height: 1;
-  color: var(--c-orange);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.5);
+  /* 塗りは下から上がってくる */
+  background: linear-gradient(to top, var(--c-orange) 50%, transparent 50%) 0 0 / 100% 200% no-repeat;
+  background-position: 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: background-position 1.1s var(--e-out) calc(var(--d, 0s) + 0.4s),
+    -webkit-text-stroke-color 0.6s;
+}
+
+.bpo-point.is-in .bpo-point__num {
+  background-position: 0 100%;
+  -webkit-text-stroke-color: var(--c-orange);
+}
+
+.bpo-point__body {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: clamp(16px, 3vw, 48px);
 }
 
 .bpo-point__title {
-  margin-top: 16px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
+  font-size: clamp(1.125rem, 1.8vw, 1.4375rem);
   font-weight: 700;
   line-height: 1.6;
+  letter-spacing: 0.04em;
 }
 
 .bpo-point__text {
-  margin-top: 18px;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   line-height: 2;
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.76);
 }
 
 
@@ -653,100 +688,144 @@ body {
   color: var(--c-ink-mid);
 }
 
-.bpo-lineup__grid {
+/*
+ * 業務はカードにせず、細い線で区切った 2 列のリストにする。
+ * ホバーで行の背景が左から薄く満ち、アイコンの丸が紺に反転する。
+ */
+.bpo-lineup__list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(16px, 2.2vw, 28px);
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: clamp(32px, 5vw, 72px);
 }
 
 .bpo-svc {
   position: relative;
   display: flex;
-  flex-direction: column;
-  padding: clamp(26px, 3vw, 36px) clamp(22px, 2.6vw, 30px);
-  border: 1px solid var(--c-line);
-  border-radius: 10px;
-  background: #fff;
-  transition: border-color 0.4s var(--e-out), box-shadow 0.4s var(--e-out),
-    transform 0.4s var(--e-out);
+  align-items: flex-start;
+  gap: clamp(18px, 2.4vw, 28px);
+  padding: clamp(26px, 3vw, 36px) 8px;
+  border-bottom: 1px solid var(--c-line);
+  isolation: isolate;
 }
 
-.bpo-svc:hover {
-  border-color: var(--c-navy);
-  box-shadow: 0 16px 36px rgba(1, 0, 56, 0.1);
-  transform: translateY(-4px);
+/* 上の 2 つだけ上にも線を引く */
+.bpo-svc:nth-child(-n+2) {
+  border-top: 1px solid var(--c-line);
 }
 
-.bpo-svc__num {
+.bpo-svc::before {
+  content: "";
   position: absolute;
-  right: clamp(20px, 2.4vw, 28px);
-  top: clamp(22px, 2.6vw, 30px);
-  font-family: var(--f-en);
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--c-ink-weak);
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, rgba(1, 0, 56, 0.04), rgba(1, 0, 56, 0));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s var(--e-out);
 }
 
-.bpo-svc__title {
-  margin-top: 20px;
-  font-size: 1.125rem;
-  font-weight: 700;
-  line-height: 1.55;
-  color: var(--c-navy);
+.bpo-svc:hover::before {
+  transform: scaleX(1);
 }
 
-.bpo-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 18px;
-}
-
-.bpo-tags li {
-  padding: 5px 12px;
-  border-radius: 4px;
+.bpo-svc__icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
   background: var(--c-bg-sub);
-  font-size: 0.8125rem;
-  color: var(--c-ink-mid);
+  transition: background-color 0.45s var(--e-out);
 }
 
-/* 最後の「その他」は紺で塗り、お問い合わせへのリンクにする */
-.bpo-svc--other {
-  border-color: var(--c-navy);
+.bpo-svc__icon .bpo-icon {
+  width: 40px;
+  height: 40px;
+  transition: stroke 0.45s;
+}
+
+.bpo-svc:hover .bpo-svc__icon {
   background: var(--c-navy);
-  color: #fff;
 }
 
-.bpo-svc--other:hover {
-  border-color: var(--c-orange);
-}
-
-.bpo-svc--other .bpo-icon {
+.bpo-svc:hover .bpo-svc__icon .bpo-icon {
   stroke: #fff;
 }
 
-.bpo-svc--other .bpo-svc__num {
-  color: rgba(255, 255, 255, 0.5);
+.bpo-svc__body {
+  flex: 1;
+  min-width: 0;
+  padding-top: 4px;
 }
 
-.bpo-svc--other .bpo-svc__title {
-  color: #fff;
+.bpo-svc__num {
+  font-family: var(--f-en);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--c-orange);
+}
+
+.bpo-svc__title {
+  margin-top: 4px;
+  font-size: clamp(1.0625rem, 1.5vw, 1.25rem);
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--c-navy);
+}
+
+/* 業務の例は、囲みを付けず、頭に小さなオレンジの点を付けて並べる */
+.bpo-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 18px;
+  margin-top: 12px;
+  font-size: 0.875rem;
+  line-height: 1.9;
+  color: var(--c-ink-mid);
+}
+
+.bpo-tags li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.bpo-tags li::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-orange);
+}
+
+/* ---- 6 つ目の「その他の業務」：業務の例の代わりに、お問い合わせへの導線を置く ---- */
+.bpo-svc--other .bpo-svc__icon {
+  background: var(--c-orange);
+}
+
+.bpo-svc--other .bpo-icon,
+.bpo-svc--other:hover .bpo-svc__icon .bpo-icon {
+  stroke: #fff;
+}
+
+.bpo-svc--other .bpo-icon .ac--fill {
+  fill: #fff;
 }
 
 .bpo-svc__text {
-  margin-top: 14px;
+  margin-top: 10px;
   font-size: 0.875rem;
   line-height: 1.9;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--c-ink-mid);
 }
 
 .bpo-svc__more {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  margin-top: auto;
-  padding-top: 20px;
+  margin-top: 12px;
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--c-orange);
@@ -1064,12 +1143,10 @@ body {
     margin-top: 12px;
   }
 
-  .bpo-lineup__grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .bpo-strength__list {
+  /* 強みは、見出しと本文を縦に積む */
+  .bpo-point__body {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   /* 流れは縦に並べ、左の番号を線でつなぐ */
@@ -1159,8 +1236,31 @@ body {
   }
 
   .bpo-issues__grid,
-  .bpo-lineup__grid {
+  .bpo-lineup__list {
     grid-template-columns: 1fr;
+  }
+
+  .bpo-svc:nth-child(2) {
+    border-top: none;
+  }
+
+  .bpo-lineup__lead br {
+    display: none;
+  }
+
+  .bpo-svc__icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .bpo-svc__icon .bpo-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .bpo-point {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 
   .bpo-icon {
