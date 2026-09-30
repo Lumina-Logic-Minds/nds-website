@@ -1105,6 +1105,28 @@
   transform: scale(1.05);
 }
 
+/* 画像がまだないカード（準備中の事業）。下の文字と重ならないよう、少し上に寄せる */
+.ct-card__thumb--soon {
+  display: grid;
+  place-items: center;
+  padding-bottom: 18%;
+  background: radial-gradient(120% 90% at 50% 30%, #2a2a33 0%, #16161a 70%);
+}
+
+.ct-card__thumb--soon span {
+  font-family: var(--f-en);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.5s var(--e-out);
+}
+
+.ct-card:hover .ct-card__thumb--soon span,
+.contents.is-flow .ct-card.is-current .ct-card__thumb--soon span {
+  color: rgba(255, 255, 255, 0.75);
+}
+
 /* 文字は画像の上に重ねる */
 .ct-card__meta {
   position: absolute;
