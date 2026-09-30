@@ -101,6 +101,11 @@
 
     <!-- ============ ファーストビュー ============ -->
     <section class="bpo-hero">
+      <!-- 見出しが降ってくるのに合わせて、右上から左下へ走る光の線 -->
+      <div class="bpo-streaks" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
       <div class="inner bpo-hero__inner">
         <div class="bpo-hero__body">
           <p class="bpo-crumb reveal">
@@ -109,12 +114,13 @@
             <span>BPO事業</span>
           </p>
           <p class="bpo-hero__en reveal" style="--d: .1s;">BPO SERVICE</p>
+          <!-- ページを開くと、1 行ずつ画面の右上から斜めに降ってくる（css/bpo.css の bpo-drop） -->
           <h1 class="bpo-hero__title">
-            <span class="bpo-line reveal" style="--d: .2s;">業務の“次の一日”を、</span>
-            <span class="bpo-line reveal" style="--d: .32s;">もっと<em>速く</em>。</span>
+            <span class="bpo-line bpo-drop" style="--d: .25s;">どこよりも、</span>
+            <span class="bpo-line bpo-drop" style="--d: .37s;"><em>早く</em>対応。</span>
           </h1>
-          <p class="bpo-hero__lead reveal" style="--d: .45s;">採用・営業・バックオフィスまで。人材サービスで培ったノウハウとAI・DXの知見を活かし、業務の設計から運用・改善までを一貫してお引き受けします。</p>
-          <div class="bpo-hero__btns reveal" style="--d: .55s;">
+          <p class="bpo-hero__lead reveal" style="--d: .8s;">採用・営業・バックオフィスまで。人材サービスで培ったノウハウとAI・DXの知見を活かし、業務の設計から運用・改善までを一貫してお引き受けします。</p>
+          <div class="bpo-hero__btns reveal" style="--d: .9s;">
             <a class="bpo-btn bpo-btn--orange" href="contact.html">お問い合わせ<span class="bpo-btn__arrow" aria-hidden="true"></span></a>
             <a class="bpo-btn bpo-btn--line" href="#lineup">対応できる業務を見る<span class="bpo-btn__arrow bpo-btn__arrow--down" aria-hidden="true"></span></a>
           </div>
@@ -141,14 +147,14 @@
 
       <!-- 数字の実績の代わりに、事実として示せる許可・認証を並べる -->
       <div class="inner">
-        <ul class="bpo-trust reveal" style="--d: .65s;">
+        <ul class="bpo-trust reveal" style="--d: 1s;">
           <li><span class="bpo-trust__label">労働者派遣事業</span><span class="bpo-trust__value">許可番号 派13-315951</span></li>
           <li><span class="bpo-trust__label">有料職業紹介事業</span><span class="bpo-trust__value">許可番号 13-ユ-311945</span></li>
           <li><span class="bpo-trust__label">プライバシーマーク</span><span class="bpo-trust__value">JIPDEC 第10862908（02）</span></li>
         </ul>
       </div>
 
-      <nav class="inner bpo-toc reveal" style="--d: .75s;" aria-label="このページの内容">
+      <nav class="inner bpo-toc reveal" style="--d: 1.1s;" aria-label="このページの内容">
         <a href="#issues">解決できる課題</a>
         <a href="#strength">3つの強み</a>
         <a href="#lineup">対応できる業務</a>

@@ -222,10 +222,10 @@ body {
 
 .bpo-hero__title {
   margin-top: 14px;
-  /* 1 行目「業務の“次の一日”を、」（11 字）が折り返さない大きさ */
-  font-size: clamp(2rem, 3.6vw, 3rem);
+  /* 1 行目「どこよりも、」（6 字）が折り返さない範囲で大きく */
+  font-size: clamp(2.75rem, 6vw, 5.25rem);
   font-weight: 900;
-  line-height: 1.35;
+  line-height: 1.25;
   letter-spacing: 0.04em;
   color: var(--c-navy);
 }
@@ -234,10 +234,82 @@ body {
   display: block;
 }
 
-/* 「速く」だけオレンジの下線を引く */
+/* 「早く」だけオレンジの下線を引く。見出しが着地したあと、左から一気に引かれる */
 .bpo-hero__title em {
   font-style: normal;
-  background: linear-gradient(transparent 72%, rgba(243, 152, 0, 0.45) 72%);
+  background: linear-gradient(transparent 66%, rgba(243, 152, 0, 0.5) 66%, rgba(243, 152, 0, 0.5) 84%, transparent 84%) no-repeat 0 0 / 0% 100%;
+  animation: bpo-marker 0.35s var(--e-out) 0.85s forwards;
+}
+
+@keyframes bpo-marker {
+  to { background-size: 100% 100%; }
+}
+
+/*
+ * 見出しが画面外の右上から斜めに降ってくる。
+ * 「早く対応」なので、ゆっくり漂わせず 0.4 秒で一気に着地させる。
+ * 着地の瞬間に、進んできた向き（左下）へほんの少し行き過ぎて戻ることで勢いを出す。
+ * 飛んでいる間は斜めに傾け、ぼかして速さを見せる。
+ */
+.bpo-drop {
+  animation: bpo-drop 0.55s var(--d, 0s) both;
+}
+
+@keyframes bpo-drop {
+  0% {
+    opacity: 0;
+    transform: translate(70vw, -80vh) skewX(-20deg);
+    filter: blur(10px);
+    animation-timing-function: cubic-bezier(0.3, 0.6, 0.35, 1);
+  }
+  25% {
+    opacity: 1;
+  }
+  72% {
+    transform: translate(-10px, 6px) skewX(4deg);
+    filter: blur(0);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.3, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* ---- 右上から左下へ走る光の線（ページを開いたときに 1 回だけ） ---- */
+.bpo-streaks {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bpo-streaks span {
+  position: absolute;
+  left: 50%;
+  top: var(--y, 40%);
+  width: var(--w, 36vw);
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(243, 152, 0, 0), var(--c, var(--c-orange)));
+  opacity: 0;
+  /* 右上 → 左下の向きに傾け、その向きに沿って動かす */
+  transform: rotate(-32deg) translateX(120vw);
+  animation: bpo-streak var(--t, 0.55s) cubic-bezier(0.5, 0, 0.2, 1) var(--d, 0.15s) forwards;
+}
+
+/* 線ごとに位置・長さ・色・タイミングを変える */
+.bpo-streaks span:nth-child(1) { --y: 22%; --w: 42vw; --d: 0.12s; }
+.bpo-streaks span:nth-child(2) { --y: 38%; --w: 28vw; --d: 0.2s;  --c: var(--c-navy); }
+.bpo-streaks span:nth-child(3) { --y: 30%; --w: 50vw; --d: 0.28s; --t: 0.5s; }
+.bpo-streaks span:nth-child(4) { --y: 52%; --w: 24vw; --d: 0.34s; --c: var(--c-navy); }
+.bpo-streaks span:nth-child(5) { --y: 46%; --w: 34vw; --d: 0.42s; --t: 0.6s; }
+
+@keyframes bpo-streak {
+  0%   { opacity: 0;   transform: rotate(-32deg) translateX(120vw); }
+  15%  { opacity: 0.9; }
+  100% { opacity: 0;   transform: rotate(-32deg) translateX(-160vw); }
 }
 
 .bpo-hero__lead {
@@ -1194,7 +1266,7 @@ body {
 /* ============ スマホ ============ */
 @media (max-width: 640px) {
   .bpo-hero__title {
-    font-size: clamp(1.5rem, 7.2vw, 2rem);
+    font-size: clamp(2.5rem, 12vw, 3.25rem);
   }
 
   .bpo-hero__btns .bpo-btn {
@@ -1295,7 +1367,14 @@ body {
 /* 動きを減らす設定のときは、回転と浮遊を止める */
 @media (prefers-reduced-motion: reduce) {
   .bpo-orbit__arc,
-  .bpo-chip {
+  .bpo-chip,
+  .bpo-drop,
+  .bpo-streaks span {
     animation: none;
+  }
+
+  .bpo-hero__title em {
+    animation: none;
+    background-size: 100% 100%;
   }
 }
