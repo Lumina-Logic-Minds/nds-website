@@ -134,6 +134,28 @@ body {
   transform: rotate(90deg) translateX(4px);
 }
 
+/*
+ * ファーストビューの 2 つのボタンは、矢印を常にゆっくり動かして押せることを示す。
+ * → は右へ、↓ は下へ、行って戻るをくり返す。
+ */
+.bpo-hero__btns .bpo-btn__arrow {
+  animation: bpo-nudge 1.6s ease-in-out infinite;
+}
+
+.bpo-hero__btns .bpo-btn__arrow--down {
+  animation-name: bpo-nudge-down;
+}
+
+@keyframes bpo-nudge {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(6px); }
+}
+
+@keyframes bpo-nudge-down {
+  0%, 100% { transform: rotate(90deg) translateX(0); }
+  50%      { transform: rotate(90deg) translateX(6px); }
+}
+
 /* ---------- 共通：線のアイコン（紺の線、.ac だけオレンジ） ---------- */
 .bpo-icon {
   width: 56px;
@@ -1369,7 +1391,8 @@ body {
   .bpo-orbit__arc,
   .bpo-chip,
   .bpo-drop,
-  .bpo-streaks span {
+  .bpo-streaks span,
+  .bpo-hero__btns .bpo-btn__arrow {
     animation: none;
   }
 
