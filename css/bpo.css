@@ -222,7 +222,7 @@ body {
 
 .bpo-hero__title {
   margin-top: 14px;
-  /* 2 行目「御社の業務に伴走する。」（11 字）が折り返さない大きさ */
+  /* 1 行目「業務の“次の一日”を、」（11 字）が折り返さない大きさ */
   font-size: clamp(2rem, 3.6vw, 3rem);
   font-weight: 900;
   line-height: 1.35;
@@ -234,7 +234,7 @@ body {
   display: block;
 }
 
-/* 「伴走」だけオレンジの下線を引く */
+/* 「速く」だけオレンジの下線を引く */
 .bpo-hero__title em {
   font-style: normal;
   background: linear-gradient(transparent 72%, rgba(243, 152, 0, 0.45) 72%);
