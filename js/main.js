@@ -395,16 +395,29 @@
       return;
     }
 
+    /*
+     * SERVICE のブロック（.srv）は、ブロック全体ではなく、画像と文章の並び（.srv__inner）が
+     * 画面に入ったときに出す。PC では画像がブロックの縦中央にあるため、ブロックで判定すると
+     * 画像が画面の下に隠れているうちに開く動きが終わってしまい、見えたときにはパッと出たように見える。
+     * （画像そのものは clip-path で隠しているため、判定には使えない）
+     */
+    function watched(el) {
+      return (el.classList.contains('srv') && el.querySelector('.srv__inner')) || el;
+    }
+
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) return;
 
-        entry.target.classList.add('is-in');
+        var el = entry.target.classList.contains('srv__inner')
+          ? entry.target.closest('.srv')
+          : entry.target;
+        el.classList.add('is-in');
         io.unobserve(entry.target);
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
 
-    targets.forEach(function (el) { io.observe(el); });
+    targets.forEach(function (el) { io.observe(watched(el)); });
   }
 
   /* ---------- カーソル追従（FV の中だけ表示する） ---------- */
