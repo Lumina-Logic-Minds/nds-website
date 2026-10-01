@@ -634,6 +634,34 @@ a.srv:hover .srv__media img {
   transform: scale(1.045);
 }
 
+/*
+ * PC（901px 以上）だけ、画像の出方を「横から滑り込みながらフェード」にする。
+ * clip-path のアニメーションは、PC の Chrome（画面の描画にグラフィック機能を使う環境）では
+ * 再生されず、画像が一瞬で表示されてしまうため。transform と透明度だけで動かす。
+ * 画像が左にあるブロックは左から、右にあるブロックは右から入る。
+ * スマホ（900px 以下）には効かない。
+ */
+@media (min-width: 901px) {
+  .srv .srv__media,
+  .srv:nth-child(even) .srv__media {
+    clip-path: none;
+    opacity: 0;
+    transform: translateX(-64px);
+    transition: opacity 1.2s var(--e-out), transform 1.4s var(--e-out);
+  }
+
+  .srv:nth-child(even) .srv__media {
+    transform: translateX(64px);
+  }
+
+  .srv.is-in .srv__media,
+  .srv.is-in:nth-child(even) .srv__media {
+    clip-path: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* 素材が届くまでの仮置き */
 .srv__media--soon {
   display: grid;
