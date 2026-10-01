@@ -174,15 +174,23 @@
 .burger.is-open span:nth-child(3) { transform: translateY(-5px) rotate(-38deg); }
 
 /* ---------- Drawer (SP) ---------- */
+/*
+ * ヘッダー（z-index: 100）より下に敷き、開いている間もロゴと × ボタンが見えるようにする。
+ * ヘッダーより上にすると、× ボタンまで覆ってしまいメニューを閉じられない。
+ */
 .drawer {
   position: fixed;
   inset: 0;
-  z-index: 110;
+  z-index: 90;
   background: var(--c-bg-sub);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 0 var(--pad-x);
+  /* safe：収まらないときは上詰めにして、HOME が上に切れないようにする */
+  justify-content: safe center;
+  /* 上はヘッダーの高さぶん空けて、HOME がロゴや × と重ならないようにする */
+  padding: var(--header-h) var(--pad-x) 0;
+  /* 背の低い画面でメニューが収まらないときは、メニューの中でスクロールさせる */
+  overflow-y: auto;
   clip-path: inset(0 0 100% 0);
   transition: clip-path 0.8s var(--e-inout);
   pointer-events: none;
@@ -227,6 +235,27 @@
   font-weight: 500;
   color: var(--c-ink-weak);
   letter-spacing: 0.1em;
+}
+
+/*
+ * メニューを開いている間は、ヘッダーの地色と影を消してメニューの背景になじませる。
+ * 黒いセクションの上で白抜き（.is-dark）になっていても、ロゴと × を黒に戻す。
+ */
+.header:has(.burger.is-open) {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--c-ink);
+}
+
+.header:has(.burger.is-open) .header__logo .lg-mark,
+.header:has(.burger.is-open) .header__logo .lg-text {
+  fill: var(--c-ink);
+}
+
+.header:has(.burger.is-open) .burger span {
+  background: var(--c-ink);
 }
 
 /* ---------- Footer ---------- */
