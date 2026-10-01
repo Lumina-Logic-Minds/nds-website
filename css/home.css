@@ -578,10 +578,14 @@
   text-align: center;
 }
 
-/* 記事カードのグリッド（3 列 × 2 行） */
+/*
+ * 記事カードのグリッド（3 列 × 2 行）。
+ * minmax(0, 1fr) にして、長いタイトルでカードの幅が広がらないようにする
+ * （1fr だけだと、中身の長さに合わせて列が広がり、ほかのカードも一緒に大きくなる）
+ */
 .news__grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(18px, 2.2vw, 30px);
 }
 
@@ -647,6 +651,8 @@
 
   line-break: strict;
   word-break: auto-phrase;
+  /* 「あああ…」のように区切りのない長い文字列でも、枠の端で改行する */
+  overflow-wrap: anywhere;
 }
 
 .news-card__date {
@@ -1347,7 +1353,7 @@
 
   /* カードは 2 列に落とす */
   .news__grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

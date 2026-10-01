@@ -1078,7 +1078,12 @@ a.srv:hover .srv__media img {
 }
 
 .nlist__title {
-  display: block;
+  /* 3 行まで表示し、あふれたら「…」で省略する（長いタイトルで 1 件だけ縦に長くならないように） */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
   font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
   font-weight: 700;
   line-height: 1.7;
@@ -1086,6 +1091,8 @@ a.srv:hover .srv__media img {
   transition: color 0.35s var(--e-out);
   line-break: strict;
   word-break: auto-phrase;
+  /* 区切りのない長い文字列でも、枠の端で改行する */
+  overflow-wrap: anywhere;
 }
 
 .nlist__item:hover .nlist__title {
@@ -1268,6 +1275,8 @@ a.srv:hover .srv__media img {
   letter-spacing: 0.02em;
   line-break: strict;
   word-break: auto-phrase;
+  /* 区切りのない長い文字列でも、枠の端で改行する */
+  overflow-wrap: anywhere;
 }
 
 /*
@@ -1309,6 +1318,8 @@ a.srv:hover .srv__media img {
   color: var(--c-ink);
   line-break: strict;
   word-break: auto-phrase;
+  /* 長い URL なども、枠の端で改行する */
+  overflow-wrap: anywhere;
 }
 
 .post__body > * + * {
