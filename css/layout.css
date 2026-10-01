@@ -330,13 +330,11 @@
   color: #fff;
 }
 
-/* 右列：SNS と Pマークを横並びにして右端へ寄せる */
+/* 右列：Pマークを右端へ寄せる */
 .footer__side {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  /* Pマークは右端のまま、Instagram だけ中央寄りへ離す */
-  gap: clamp(44px, 7vw, 96px);
   /* 中央列の電話番号と高さを揃える */
   margin-top: 26px;
 }
@@ -344,51 +342,6 @@
 /* Pマーク：画像のみ・リンクなし */
 .footer__pmark {
   width: 92px;
-  /* SNS 側はラベルのぶん背が高いので、その差を戻して中心を揃える */
-  margin-bottom: 29px;
-}
-
-.footer__sns {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.footer__sns a {
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 50px;
-  height: 50px;
-  border: 1px solid var(--c-line);
-  border-radius: 50%;
-  transition: border-color 0.4s var(--e-out), transform 0.4s var(--e-out);
-}
-
-.footer__sns-label {
-  font-family: var(--f-en);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--c-ink);
-  white-space: nowrap;
-}
-
-.footer__sns a:hover {
-  border-color: #a3339b;   /* Instagram のパープル */
-  transform: translateY(-3px);
-}
-
-.footer__sns img {
-  width: 25px;
-  height: 25px;
-  transition: opacity 0.4s var(--e-out);
-}
-
-.footer__sns a:hover img {
-  opacity: 0.62;
 }
 
 .footer__copy {
@@ -439,13 +392,61 @@
 
   .burger { display: block; }
 
+  /* 1 列になる幅では、ロゴ・住所・連絡先・Pマークをすべて中央にそろえる */
   .footer__body {
     grid-template-columns: 1fr;
     gap: 40px;
+    text-align: center;
   }
 
-  /* 狭い画面では右列を左寄せにする */
-  .footer__side {
-    justify-content: flex-start;
+  .footer__logo {
+    margin-inline: auto;
   }
+
+  .footer__side {
+    justify-content: center;
+    margin-top: 0;
+  }
+}
+
+/*
+ * スマホでは、フッターのメニュー 7 つを 3 列で並べる。
+ *   HOME     COMPANY  SERVICE
+ *   NEWS     CONTACT  RECRUIT
+ *            PRIVACY
+ * どの列も、語の中心を縦にそろえる。列の幅はそれぞれいちばん長い語に合わせ、
+ * 左の列は左端、右の列は右端に置き、列と列の間は均等に空ける。
+ * HTML の並び順は PC と同じまま、置く場所だけ指定する。
+ */
+@media (max-width: 640px) {
+  .footer__nav {
+    display: grid;
+    grid-template-columns: auto 1fr auto 1fr auto;
+    gap: 16px 0;
+    justify-items: center;
+    /*
+     * 左右の列が離れすぎないよう、メニューを中央の 290px に収める。
+     * 下の区切り線は全幅のままにしたいので、幅ではなく左右の余白で絞る
+     */
+    padding-inline: max(0px, calc((100% - 290px) / 2));
+  }
+
+  /* 左の列：HOME・NEWS */
+  .footer__nav a:nth-child(1),
+  .footer__nav a:nth-child(5) { grid-column: 1; }
+
+  /* 中央の列：COMPANY・CONTACT・PRIVACY */
+  .footer__nav a:nth-child(2),
+  .footer__nav a:nth-child(6),
+  .footer__nav a:nth-child(7) { grid-column: 3; }
+
+  /* 右の列：SERVICE・RECRUIT */
+  .footer__nav a:nth-child(3),
+  .footer__nav a:nth-child(4) { grid-column: 5; }
+
+  .footer__nav a:nth-child(-n+3) { grid-row: 1; }
+  .footer__nav a:nth-child(4),
+  .footer__nav a:nth-child(5),
+  .footer__nav a:nth-child(6) { grid-row: 2; }
+  .footer__nav a:nth-child(7) { grid-row: 3; }
 }
