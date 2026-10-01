@@ -370,17 +370,17 @@ body {
 
 /*
  * ページを開いたときの登場。
- * タイトルは一気に降らせるが、こちらは約 2.5 秒かけて、ゆったり組み上がるようにする。
- *   0.30 秒  中央の丸がふくらんで現れる（0.9 秒）
- *   0.40 秒  外側の円が、真上から時計回りに描かれる（1.4 秒）。内側の点線の円は広がりながら現れる
- *   0.90 秒  5 つの業務の丸が、中心からそれぞれの位置へ出ていく（1 つ 1 秒、0.15 秒ずつずらす）
- *   2.40 秒  オレンジの弧が現れて回り始める
+ * タイトルは一気に降らせるが、こちらは約 3.7 秒かけて、ゆったり組み上がるようにする。
+ *   0.30 秒  中央の丸がふくらんで現れる（1.3 秒）
+ *   0.40 秒  外側の円が、真上から時計回りに描かれる（2.2 秒）。内側の点線の円は広がりながら現れる
+ *   1.20 秒  5 つの業務の丸が、中心からそれぞれの位置へ出ていく（1 つ 1.5 秒、0.25 秒ずつずらす）
+ *   3.60 秒  オレンジの弧が現れて回り始める
  */
 .bpo-orbit__outer {
   stroke-dasharray: 100;
   transform-origin: 200px 200px;
   transform: rotate(-90deg);
-  animation: bpo-draw 1.4s cubic-bezier(0.45, 0, 0.2, 1) 0.4s both;
+  animation: bpo-draw 2.2s cubic-bezier(0.45, 0, 0.2, 1) 0.4s both;
 }
 
 @keyframes bpo-draw {
@@ -391,7 +391,7 @@ body {
 .bpo-orbit__inner {
   stroke-dasharray: 3 7;
   transform-origin: 200px 200px;
-  animation: bpo-ring-in 1.2s var(--e-out) 0.5s both;
+  animation: bpo-ring-in 1.8s var(--e-out) 0.5s both;
 }
 
 @keyframes bpo-ring-in {
@@ -407,7 +407,7 @@ body {
   stroke-dasharray: 18 82;
   transform-origin: 200px 200px;
   animation:
-    bpo-fade-in 0.8s ease-out 2.4s both,
+    bpo-fade-in 1s ease-out 3.6s both,
     bpo-spin 14s linear infinite;
 }
 
@@ -437,7 +437,7 @@ body {
   box-shadow: 0 24px 60px rgba(1, 0, 56, 0.28);
   /* 業務の丸は、この丸の後ろから飛び出す */
   z-index: 1;
-  animation: bpo-pop 0.9s cubic-bezier(0.3, 1.35, 0.5, 1) 0.3s both;
+  animation: bpo-pop 1.3s cubic-bezier(0.3, 1.3, 0.5, 1) 0.3s both;
 }
 
 @keyframes bpo-pop {
@@ -494,15 +494,15 @@ body {
   box-shadow: 0 10px 24px rgba(1, 0, 56, 0.1);
   transform: translate(-50%, -50%);
   animation:
-    bpo-launch 1s var(--ld) both,
+    bpo-launch 1.5s var(--ld) both,
     bpo-float 6s ease-in-out var(--fd) infinite;
 }
 
-.bpo-chip--1 { left: 50%; top: 3%;  --fx: 0%;      --fy: 223.8%;  --ld: 0.9s;  --fd: 2.4s; }
-.bpo-chip--2 { left: 94%; top: 35%; --fx: -209.5%; --fy: 71.4%;   --ld: 1.05s; --fd: 2.8s; border-color: var(--c-orange); color: var(--c-orange); }
-.bpo-chip--3 { left: 78%; top: 88%; --fx: -133.3%; --fy: -181%;   --ld: 1.2s;  --fd: 3.2s; }
-.bpo-chip--4 { left: 22%; top: 88%; --fx: 133.3%;  --fy: -181%;   --ld: 1.35s; --fd: 3.6s; border-color: var(--c-orange); color: var(--c-orange); }
-.bpo-chip--5 { left: 6%;  top: 35%; --fx: 209.5%;  --fy: 71.4%;   --ld: 1.5s;  --fd: 4s; }
+.bpo-chip--1 { left: 50%; top: 3%;  --fx: 0%;      --fy: 223.8%;  --ld: 1.2s;  --fd: 3s; }
+.bpo-chip--2 { left: 94%; top: 35%; --fx: -209.5%; --fy: 71.4%;   --ld: 1.45s; --fd: 3.4s; border-color: var(--c-orange); color: var(--c-orange); }
+.bpo-chip--3 { left: 78%; top: 88%; --fx: -133.3%; --fy: -181%;   --ld: 1.7s;  --fd: 3.8s; }
+.bpo-chip--4 { left: 22%; top: 88%; --fx: 133.3%;  --fy: -181%;   --ld: 1.95s; --fd: 4.2s; border-color: var(--c-orange); color: var(--c-orange); }
+.bpo-chip--5 { left: 6%;  top: 35%; --fx: 209.5%;  --fy: 71.4%;   --ld: 2.2s;  --fd: 4.6s; }
 
 /* 中心から出ていき、少しだけ外へ行き過ぎてから、ゆっくり位置に収まる */
 @keyframes bpo-launch {
