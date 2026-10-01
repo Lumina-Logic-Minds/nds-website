@@ -27,7 +27,8 @@ function nds_arrow( $dir = 'next', $size = 14, $stroke = '2.4' ) {
 }
 
 /**
- * 記事のサムネイル。アイキャッチがなければ代わりの画像を出す
+ * 記事のサムネイル。アイキャッチがなければ代わりに NDS のロゴを出す
+ * （TOP の NEWS のカードと NEWS 一覧で使う。記事詳細ではアイキャッチがなければ何も出さない）
  */
 function nds_post_thumb( $post = null, $lazy = true ) {
 	$post = get_post( $post );
@@ -45,8 +46,8 @@ function nds_post_thumb( $post = null, $lazy = true ) {
 	}
 
 	printf(
-		'<img src="%s" alt="" width="800" height="500"%s>',
-		esc_url( nds_asset_url( 'image/contents/news.jpg' ) ),
+		'<img src="%s" alt="" width="534" height="305"%s>',
+		esc_url( nds_asset_url( 'image/contents/nds.png' ) ),
 		$lazy ? ' loading="lazy"' : ''
 	);
 }
