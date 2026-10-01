@@ -126,11 +126,14 @@
           </div>
         </div>
 
-        <!-- 右側の図：対応する業務が、中心の NDS のまわりを回っている -->
+        <!--
+          右側の図：対応する業務が、中心の NDS のまわりを回っている。
+          ページを開くと、中央の丸 → 外側の円 → 5 つの業務の丸の順に、中心から広がるように現れる
+        -->
         <div class="bpo-orbit" aria-hidden="true">
           <svg class="bpo-orbit__rings" viewBox="0 0 400 400">
-            <circle cx="200" cy="200" r="190" />
-            <circle cx="200" cy="200" r="138" />
+            <circle class="bpo-orbit__outer" cx="200" cy="200" r="190" pathLength="100" />
+            <circle class="bpo-orbit__inner" cx="200" cy="200" r="138" />
             <circle class="bpo-orbit__arc" cx="200" cy="200" r="190" pathLength="100" />
           </svg>
           <div class="bpo-orbit__core">
