@@ -190,18 +190,6 @@ body {
     var(--c-bg);
 }
 
-/* 背景に薄いドット格子（TOP の FV と同じ系統） */
-.bpo-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(1, 0, 56, 0.09) 1px, transparent 1px);
-  background-size: 22px 22px;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
-  pointer-events: none;
-}
-
 .bpo-hero__inner {
   position: relative;
   display: grid;
